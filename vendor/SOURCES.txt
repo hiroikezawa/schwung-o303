@@ -1,0 +1,6 @@
+tb3po        charlesvestal/schwung-tb3po @ efbc26c  (module.json 0.3.1)
+schwung-303  charlesvestal/schwung-303   @ ccc2f1f  (module.json 0.3.3)
+pedal-fx     schwung-pedal-fx (local)    @ uncommitted  (Rat Drive 0.3.0)
+pedal-fx note: the code is Rat Drive 0.3.0's; its author name reads Hiro Ikezawa, as in later pedal-fx
+  releases (comments and metadata only). schwung-pedal-fx has since moved on (newer RAT DSP), so
+  `scripts/vendor.sh` would pull a different -- differently sounding -- RAT.

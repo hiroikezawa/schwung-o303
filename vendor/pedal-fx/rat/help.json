@@ -1,0 +1,99 @@
+{
+  "title": "Rat Drive",
+  "children": [
+    {
+      "title": "Overview",
+      "lines": [
+        "RAT-style op-amp",
+        "distortion. Op-amp",
+        "model from dm-Rat",
+        "(Dave Mollen) via",
+        "schwung-303.",
+        "",
+        "v0.2: the 1N914",
+        "clipper and the",
+        "Filter are solved",
+        "as ONE circuit:",
+        "bright Filter loads",
+        "the diodes, as on",
+        "the real pedal."
+      ]
+    },
+    {
+      "title": "Controls",
+      "lines": [
+        "1 Dist: op-amp gain",
+        "2 Filter: clockwise",
+        "  = darker (RAT)",
+        "3 Volume: 50% = the",
+        "  input's loudness",
+        "4 Mix: dry/wet,",
+        "  equal power",
+        "5 Input: +-24 dB in",
+        "6 Low Cut: HPF",
+        "  before the drive",
+        "7 Hi Cut: LPF after",
+        "8 Output: +-18 dB"
+      ]
+    },
+    {
+      "title": "Model",
+      "lines": [
+        "Page 2: op-amp.",
+        "RAT  = LM308 (the",
+        "  original, 80s)",
+        "RAT2 = OP07DP (RAT2",
+        "  from ~1996 on)",
+        "",
+        "OP07: wider band,",
+        "more top end at",
+        "high gain, tighter.",
+        "LM308: softer, more",
+        "sag when it clips.",
+        "Low gain: the same.",
+        "Switching glides."
+      ]
+    },
+    {
+      "title": "Presets",
+      "lines": [
+        "Classic Rat",
+        "Clean Boost (+4 dB)",
+        "Heavy: tight, full",
+        "Synth Grind",
+        "Bass Rat: 50% mix",
+        "  keeps clean lows",
+        "RAT2 Classic",
+        "RAT2 Tight",
+        "",
+        "All level-matched",
+        "to the dry signal."
+      ]
+    },
+    {
+      "title": "Tips",
+      "lines": [
+        "Drums / bass: use",
+        "Mix 40-70% to keep",
+        "the low end clean.",
+        "Low Cut tightens",
+        "the drive (like a",
+        "boost in front).",
+        "Hi Cut tames fizz",
+        "on bright synths."
+      ]
+    },
+    {
+      "title": "About",
+      "lines": [
+        "Unofficial emulation",
+        "Not affiliated with",
+        "ProCo / Radial.",
+        "",
+        "Licence: GPL-3.0",
+        "(dm-Rat derived).",
+        "4x oversampled."
+      ]
+    }
+  ]
+}

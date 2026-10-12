@@ -1,0 +1,32 @@
+{
+  "id": "pfx-rat",
+  "name": "Rat Drive",
+  "abbrev": "RAT",
+  "version": "0.3.0",
+  "author": "Hiro Ikezawa",
+  "license": "GPL-3.0-only",
+  "oversampling": 4,
+  "description": "RAT-style op-amp distortion (dm-Rat model via schwung-303) with a RAT (LM308) / RAT2 (OP07DP) op-amp switch: Distortion, Filter, Volume plus Mix, Input, Low/Hi Cut and Output. Unofficial emulation.",
+  "params": [
+    {"key": "distortion", "name": "Distortion", "default": 0.5},
+    {"key": "filter",     "name": "Filter",     "default": 0.5},
+    {"key": "volume",     "name": "Volume",     "default": 0.5},
+    {"key": "mix",        "name": "Mix",        "default": 1.0},
+    {"key": "input",      "name": "Input",      "default": 0.5},
+    {"key": "low_cut",    "name": "Low Cut",    "default": 0.0},
+    {"key": "hi_cut",     "name": "Hi Cut",     "default": 0.0},
+    {"key": "output",     "name": "Output",     "default": 0.5}
+  ],
+  "switches": [
+    {"key": "model", "name": "Model", "options": ["RAT", "RAT2"], "default": 0}
+  ],
+  "presets": [
+    {"name": "Classic Rat", "distortion": 0.60, "filter": 0.45, "volume": 0.50, "mix": 1.00, "input": 0.50, "low_cut": 0.05, "hi_cut": 0.00, "output": 0.50},
+    {"name": "Clean Boost", "distortion": 0.08, "filter": 0.20, "volume": 0.985, "mix": 1.00, "input": 0.50, "low_cut": 0.00, "hi_cut": 0.00, "output": 0.50},
+    {"name": "Heavy",       "distortion": 1.00, "filter": 0.58, "volume": 0.50, "mix": 1.00, "input": 0.58, "low_cut": 0.22, "hi_cut": 0.12, "output": 0.50},
+    {"name": "Synth Grind", "distortion": 0.78, "filter": 0.35, "volume": 0.47, "mix": 0.70, "input": 0.45, "low_cut": 0.30, "hi_cut": 0.25, "output": 0.50},
+    {"name": "Bass Rat",    "distortion": 0.55, "filter": 0.55, "volume": 0.50, "mix": 0.50, "input": 0.50, "low_cut": 0.38, "hi_cut": 0.30, "output": 0.50},
+    {"name": "RAT2 Classic","distortion": 0.60, "filter": 0.45, "volume": 0.50, "mix": 1.00, "input": 0.50, "low_cut": 0.05, "hi_cut": 0.00, "output": 0.50, "model": 1},
+    {"name": "RAT2 Tight",  "distortion": 0.92, "filter": 0.52, "volume": 0.50, "mix": 1.00, "input": 0.55, "low_cut": 0.25, "hi_cut": 0.08, "output": 0.50, "model": 1}
+  ]
+}

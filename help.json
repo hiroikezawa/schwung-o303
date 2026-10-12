@@ -1,0 +1,108 @@
+{
+  "title": "o303",
+  "children": [
+    {
+      "title": "What it is",
+      "lines": [
+        "TB-3PO's sequencer",
+        "plays a built-in 303",
+        "through a RAT. One",
+        "slot, no MIDI wiring.",
+        "Runs on Move's Play."
+      ]
+    },
+    {
+      "title": "Pads",
+      "lines": [
+        "Top 2 rows: 16 steps.",
+        "Tap: rest > note >",
+        "accent > slide.",
+        "Row 3: banks 1-8.",
+        "Tap recalls (at the",
+        "bar when playing).",
+        "Shift+tap saves.",
+        "Bottom: NEW MUT DIR."
+      ]
+    },
+    {
+      "title": "Pad colours",
+      "lines": [
+        "White note, red",
+        "accent, blue slide.",
+        "Yellow: playing step.",
+        "Purple: current bank.",
+        "Teal: filled bank."
+      ]
+    },
+    {
+      "title": "Buttons",
+      "lines": [
+        "+ / -  octave",
+        "< / >  steps 17-32",
+        "Undo   last NEW/MUT",
+        "X X    clear pattern",
+        "Jog    pages",
+        "Hold enum knob + jog",
+        "click: option list."
+      ]
+    },
+    {
+      "title": "Synth page",
+      "lines": [
+        "1 VOLUME (after RAT)",
+        "2 CUTOFF",
+        "3 RESONANCE",
+        "4 ENV MOD",
+        "5 DECAY",
+        "6 ACCENT amount",
+        "7 RAT DISTORTION",
+        "8 RAT FILTER"
+      ]
+    },
+    {
+      "title": "Pattern page",
+      "lines": [
+        "Density, Accent prob,",
+        "Slide prob, Gate,",
+        "Root, Scale, Length,",
+        "Octaves. The first",
+        "three apply at the",
+        "next NEW or MUT."
+      ]
+    },
+    {
+      "title": "Tone page",
+      "lines": [
+        "Waveform, Tuning,",
+        "303 Level (into RAT),",
+        "RAT on/off, RAT/RAT2,",
+        "RAT Level, Low Cut,",
+        "Hi Cut."
+      ]
+    },
+    {
+      "title": "VCO page",
+      "lines": [
+        "VCO2 joins the 303",
+        "before its filter.",
+        "1 VCO2 level, 0 = off",
+        "2 Tune  3 Fine",
+        "4 Saw / Square",
+        "5 Hard sync to VCO1",
+        "6 Sync Env: sweep up",
+        "  from the env/accent",
+        "7 VCO1 level"
+      ]
+    },
+    {
+      "title": "Devilfish page",
+      "lines": [
+        "Mod switch, then",
+        "decays, feedback HPF,",
+        "soft attack, slide",
+        "time, shaper drive.",
+        "Off = stock 303."
+      ]
+    }
+  ]
+}

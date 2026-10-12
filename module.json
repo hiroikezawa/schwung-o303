@@ -1,0 +1,535 @@
+{
+  "id": "o303",
+  "name": "o303",
+  "abbrev": "o303",
+  "version": "0.3.0",
+  "description": "Acid bass voice: the TB-3PO generative sequencer playing a built-in Open303 (with a hard-synced second VCO) through a RAT distortion, in one chain slot",
+  "author": "Hiro Ikezawa",
+  "license": "GPL-3.0-only",
+  "api_version": 2,
+  "dsp": "dsp.so",
+  "ui_chain": "ui_chain.js",
+  "component_type": "sound_generator",
+  "capabilities": {
+    "component_type": "sound_generator",
+    "chainable": true,
+    "audio_in": false,
+    "audio_out": true,
+    "midi_in": true,
+    "midi_out": false,
+    "claims_ccs": [
+      54,
+      55,
+      56,
+      62,
+      63,
+      119
+    ],
+    "chain_params": [
+      {
+        "key": "volume",
+        "name": "Volume",
+        "short_name": "Vol",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.75,
+        "unit": "%",
+        "viz": {
+          "kind": "fader"
+        }
+      },
+      {
+        "key": "cutoff",
+        "name": "Cutoff",
+        "short_name": "Cut",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "resonance",
+        "name": "Resonance",
+        "short_name": "Res",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "env_mod",
+        "name": "Env Mod",
+        "short_name": "Env",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "decay",
+        "name": "Decay",
+        "short_name": "Dec",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "acc_level",
+        "name": "Accent",
+        "short_name": "Acc",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%",
+        "viz": false
+      },
+      {
+        "key": "rat_dist",
+        "name": "RAT Distortion",
+        "short_name": "Dist",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "rat_filter",
+        "name": "RAT Filter",
+        "short_name": "Filt",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "density",
+        "name": "Density",
+        "short_name": "Dens",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.7,
+        "unit": "%"
+      },
+      {
+        "key": "accent",
+        "name": "Accent Prob",
+        "short_name": "Acc",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.4,
+        "unit": "%"
+      },
+      {
+        "key": "slide",
+        "name": "Slide Prob",
+        "short_name": "Slide",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.25,
+        "unit": "%"
+      },
+      {
+        "key": "gate",
+        "name": "Gate",
+        "short_name": "Gate",
+        "type": "float",
+        "min": 0.1,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "root",
+        "name": "Root",
+        "short_name": "Root",
+        "type": "enum",
+        "options": [
+          "C",
+          "C#",
+          "D",
+          "D#",
+          "E",
+          "F",
+          "F#",
+          "G",
+          "G#",
+          "A",
+          "A#",
+          "B"
+        ],
+        "default": 9
+      },
+      {
+        "key": "scale",
+        "name": "Scale",
+        "short_name": "Scale",
+        "type": "enum",
+        "options": [
+          "Minor",
+          "Phrygian",
+          "HarmMinor",
+          "MinPent",
+          "Dorian",
+          "Major"
+        ],
+        "default": 0
+      },
+      {
+        "key": "length",
+        "name": "Length",
+        "short_name": "Len",
+        "type": "enum",
+        "options": [
+          "8",
+          "16",
+          "24",
+          "32"
+        ],
+        "default": 1,
+        "options_as_string": true
+      },
+      {
+        "key": "octaves",
+        "name": "Octaves",
+        "short_name": "Oct",
+        "type": "int",
+        "min": 1,
+        "max": 3,
+        "step": 1,
+        "default": 2
+      },
+      {
+        "key": "direction",
+        "name": "Direction",
+        "short_name": "Dir",
+        "type": "enum",
+        "options": [
+          "Fwd",
+          "Rev",
+          "Ping",
+          "Rnd"
+        ],
+        "default": 0
+      },
+      {
+        "key": "transpose",
+        "name": "Transpose",
+        "short_name": "Oct",
+        "type": "enum",
+        "options": [
+          "-4 oct",
+          "-3 oct",
+          "-2 oct",
+          "-1 oct",
+          "0 oct",
+          "+1 oct",
+          "+2 oct",
+          "+3 oct",
+          "+4 oct"
+        ],
+        "default": 4,
+        "short_options": [
+          "-4",
+          "-3",
+          "-2",
+          "-1",
+          "0",
+          "+1",
+          "+2",
+          "+3",
+          "+4"
+        ]
+      },
+      {
+        "key": "current_bank",
+        "name": "Bank",
+        "short_name": "Bank",
+        "type": "int",
+        "min": 1,
+        "max": 8,
+        "step": 1,
+        "default": 1,
+        "access": "read"
+      },
+      {
+        "key": "waveform",
+        "name": "Waveform",
+        "short_name": "Wave",
+        "type": "enum",
+        "options": [
+          "Saw",
+          "Square"
+        ],
+        "default": 0
+      },
+      {
+        "key": "tuning",
+        "name": "Tuning",
+        "short_name": "Tune",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "osc_level",
+        "name": "303 Level",
+        "short_name": "303",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.8,
+        "unit": "%",
+        "viz": {
+          "kind": "fader"
+        }
+      },
+      {
+        "key": "rat_on",
+        "name": "RAT",
+        "short_name": "RAT",
+        "type": "enum",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "default": 1
+      },
+      {
+        "key": "rat_model",
+        "name": "RAT Model",
+        "short_name": "Model",
+        "type": "enum",
+        "options": [
+          "RAT",
+          "RAT2"
+        ],
+        "default": 0
+      },
+      {
+        "key": "rat_level",
+        "name": "RAT Level",
+        "short_name": "Level",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%",
+        "viz": {
+          "kind": "fader"
+        }
+      },
+      {
+        "key": "rat_low_cut",
+        "name": "RAT Low Cut",
+        "short_name": "LoCut",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.0,
+        "unit": "%"
+      },
+      {
+        "key": "rat_hi_cut",
+        "name": "RAT Hi Cut",
+        "short_name": "HiCut",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.0,
+        "unit": "%"
+      },
+      {
+        "key": "vco2_level",
+        "name": "VCO2 Level",
+        "short_name": "VCO2",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.0,
+        "unit": "%",
+        "viz": {
+          "kind": "fader"
+        }
+      },
+      {
+        "key": "vco2_tune",
+        "name": "VCO2 Tune",
+        "short_name": "Tune",
+        "type": "int",
+        "min": -24,
+        "max": 24,
+        "step": 1,
+        "default": 7,
+        "unit": "st"
+      },
+      {
+        "key": "vco2_fine",
+        "name": "VCO2 Fine",
+        "short_name": "Fine",
+        "type": "int",
+        "min": -50,
+        "max": 50,
+        "step": 1,
+        "default": 0,
+        "unit": "ct"
+      },
+      {
+        "key": "vco2_wave",
+        "name": "VCO2 Wave",
+        "short_name": "Wave",
+        "type": "enum",
+        "options": [
+          "Saw",
+          "Square"
+        ],
+        "default": 0
+      },
+      {
+        "key": "vco2_sync",
+        "name": "Hard Sync",
+        "short_name": "Sync",
+        "type": "enum",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "default": 1
+      },
+      {
+        "key": "sync_env",
+        "name": "Sync Env",
+        "short_name": "SyncEnv",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.0,
+        "unit": "%",
+        "viz": false
+      },
+      {
+        "key": "vco1_level",
+        "name": "VCO1 Level",
+        "short_name": "VCO1",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 1.0,
+        "unit": "%",
+        "viz": {
+          "kind": "fader"
+        }
+      },
+      {
+        "key": "devil_mod_switch",
+        "name": "Devilfish",
+        "short_name": "Mod",
+        "type": "enum",
+        "options": [
+          "Off",
+          "On"
+        ],
+        "default": 0
+      },
+      {
+        "key": "normal_decay",
+        "name": "Normal Decay",
+        "short_name": "Norm",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "accent_decay",
+        "name": "Accent Decay",
+        "short_name": "AccDec",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "feedback_hpf",
+        "name": "Feedback HPF",
+        "short_name": "HPF",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.5,
+        "unit": "%"
+      },
+      {
+        "key": "soft_attack",
+        "name": "Soft Attack",
+        "short_name": "Attack",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.0,
+        "unit": "%"
+      },
+      {
+        "key": "slide_time",
+        "name": "Slide Time",
+        "short_name": "SlideT",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.3,
+        "unit": "%"
+      },
+      {
+        "key": "tanh_shaper_drive",
+        "name": "Shaper Drive",
+        "short_name": "Shaper",
+        "type": "float",
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "default": 0.0,
+        "unit": "%"
+      }
+    ]
+  }
+}
