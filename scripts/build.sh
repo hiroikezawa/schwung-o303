@@ -70,7 +70,9 @@ for f in "$V"/schwung-303/open303/*.c; do cc "open303_$(basename "$f" .c)" "$f" 
 # 3. The RAT: rat.c inside dsp/rat_stage.c, with the pedal project's flags.
 cc rat_stage "$MODULE/dsp/rat_stage.c" "${C11[@]}" -O2 -ffp-contract=fast -Wall -Wextra -Werror -Wshadow \
    -Wno-unused-function -DPFX_OS="$RAT_OS" -I"$V" -I"$V/pedal-fx" -I"$GEN/rat" -I"$MODULE/dsp"
-# 4. The module.
+# 4. The 8-step acid line generator (NEW at Length 8).
+cc acid8 "$MODULE/dsp/acid8.c" "${C11[@]}" -O2 -Wall -Wextra -Werror -Wshadow -I"$MODULE/dsp"
+# 5. The module.
 cc tr_plugin "$MODULE/dsp/tr_plugin.c" "${C11[@]}" -O2 -Wall -Wextra -Werror -I"$API" -I"$GEN" -I"$MODULE/dsp"
 
 # libstdc++ stays dynamic, as in the catalog 303 module this code comes from:

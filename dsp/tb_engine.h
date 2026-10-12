@@ -44,6 +44,10 @@ void tb_engine_block(tb_engine *e, int frames);
 void tb_engine_set(tb_engine *e, const char *key, const char *val);
 int tb_engine_get(tb_engine *e, const char *key, char *buf, int len);
 
+/* The hidden style (ACID8_*) of the 8-step line the last NEW at Length 8
+ * would have written from the current seed and settings -- for the tests. */
+int tb_engine_generate8_style(const tb_engine *e);
+
 /* One read for the UI:
  *   "<position>,<running>,<bank>,<pending or -1>,<8 x 0|1 filled>,<length>,
  *    <direction>,<transpose>,<undo 0|1>|<one digit 0..3 per step>" */

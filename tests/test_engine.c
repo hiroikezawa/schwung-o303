@@ -14,6 +14,7 @@
  */
 #include "tb3po/include/plugin_api_v1.h"
 #include "tb_engine.h"
+#include "acid8.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -142,9 +143,13 @@ int main(void) {
         {"length", "32"}, {"density", "1.000"}, {"slide", "0.900"}, {"accent", "0.900"},
         {"generate", "0"}, {"undo", "1"}, {"direction", "3"}, {"recall_bank", "0"},
         {"root", "2"}, {"scale", "3"}, {"octaves", "3"}, {"generate", "0"}, {"store_bank", "7"},
-        {"length", "8"}, {"direction", "0"}, {"recall_bank", "3"}, {"clear", "1"}, {"undo", "1"},
+        /* MUT at Length 8 is TB-3PO's, unchanged (only NEW is not). */
+        {"length", "8"}, {"mutate", "1"}, {"mutate", "1"},
+        {"direction", "0"}, {"recall_bank", "3"}, {"clear", "1"}, {"undo", "1"},
         {"transpose", "-24"}, {"gate", "0.100"}, {"recall_bank_now", "7"}, {"regen", "1"},
         {"seed", "12345"}, {"length", "24"}, {"mutate", "1"}, {"mutate", "1"},
+        /* NEW at 16 and 24 (32 above) is TB-3PO's own generator, unchanged. */
+        {"generate", "0"}, {"length", "16"}, {"generate", "0"}, {"store_bank", "5"},
     };
     for (unsigned i = 0; i < sizeof edits / sizeof edits[0]; ++i) {
         both_set(edits[i][0], edits[i][1]);
@@ -185,6 +190,123 @@ int main(void) {
     }
     CHECK(accents > 50 && plains > 50 && slides > 30);
 
+    /* --- NEW at Length 8: the acid line generator ------------------------------------ *
+     * From here on the engine and the reference part ways on purpose. */
+    stop(); run(0.5);
+    static const int SC[6][7] = {               /* tb3po.c's SCALES */
+        {0, 2, 3, 5, 7, 8, 10}, {0, 1, 3, 5, 7, 8, 10}, {0, 2, 3, 5, 7, 8, 11},
+        {0, 3, 5, 7, 10, 0, 0}, {0, 2, 3, 5, 7, 9, 10}, {0, 2, 4, 5, 7, 9, 11},
+    };
+    static const int SC_LEN[6] = {7, 7, 7, 5, 7, 7};
+    static const char *const s8[][2] = {
+        {"length", "8"}, {"root", "3"}, {"scale", "1"}, {"octaves", "2"}, {"density", "0.700"},
+        {"accent", "0.400"}, {"slide", "0.250"}, {"transpose", "0"}, {"direction", "0"},
+    };
+    for (unsigned i = 0; i < sizeof s8 / sizeof s8[0]; ++i) both_set(s8[i][0], s8[i][1]);
+    compare("settings for 8 steps");
+    static char pat_before[512], ref_pat[512], eng_pat[512], ref_seed[32], eng_seed[32], want[512];
+    tb_engine_get(eng, "pattern", pat_before, sizeof pat_before);
+    both_set("generate", "0");
+    ref->get_param(ref_inst, "a.pattern", ref_pat, sizeof ref_pat);
+    ref->get_param(ref_inst, "a.seed", ref_seed, sizeof ref_seed);
+    tb_engine_get(eng, "pattern", eng_pat, sizeof eng_pat);
+    tb_engine_get(eng, "seed", eng_seed, sizeof eng_seed);
+    CHECK(!strcmp(ref_seed, eng_seed));          /* the seed comes from TB-3PO's own stream ... */
+    CHECK(strcmp(ref_pat, eng_pat) != 0);        /* ... the pattern from the other generator */
+    {
+        /* Exactly acid8_generate's line, written in TB-3PO's own representation. */
+        const acid8_in in = {SC[1], SC_LEN[1], 2, 0.7f, 0.4f, 0.25f};
+        acid8_out o;
+        acid8_generate(&in, (uint32_t)strtoul(eng_seed, NULL, 10), -1, &o);
+        int k = snprintf(want, sizeof want, "8|");
+        for (int i = 0; i < 8; ++i) k += snprintf(want + k, sizeof want - k, "%s%d", i ? "," : "", o.steps[i]);
+        k += snprintf(want + k, sizeof want - k, "|");
+        for (int i = 0; i < 8; ++i) k += snprintf(want + k, sizeof want - k, "%s%d", i ? "," : "", o.degrees[i]);
+        k += snprintf(want + k, sizeof want - k, "|");
+        for (int i = 0; i < 8; ++i) k += snprintf(want + k, sizeof want - k, "%s%d", i ? "," : "", o.octaves[i]);
+        CHECK(!strcmp(eng_pat, want));
+        CHECK(tb_engine_generate8_style(eng) == o.style);
+    }
+    tb_engine_set(eng, "undo", "1");             /* Undo brings back the pattern before NEW */
+    tb_engine_get(eng, "pattern", eng_pat, sizeof eng_pat);
+    CHECK(!strcmp(eng_pat, pat_before));
+    tb_engine_set(eng, "generate", "0");
+
+    /* Playing it: every note is in D# Phrygian, step 1 is the root, NEW on the
+     * fly never strands a note. */
+    {
+        const int from = eng_n;
+        int styles[ACID8_STYLES] = {0};
+        play();
+        for (int k = 0; k < 60; ++k) {
+            if (k % 3 == 0) {
+                tb_engine_set(eng, "generate", "0");
+                styles[tb_engine_generate8_style(eng)]++;
+            }
+            run(0.27);                           /* half a bar at 120 */
+        }
+        stop(); run(1.0);
+        int open[128] = {0}, ons = 0, first_seen = 0, same_note_slides = 0;
+        for (int i = from; i < eng_n; ++i) {
+            const uint8_t *b = eng_ev[i].b;
+            if (b[0] == 0x90) {
+                ++ons;
+                CHECK(b[2] == 118 || b[2] == 72);
+                int ok = 0;
+                for (int d = 0; d < 7; ++d)
+                    for (int o = 0; o < 2; ++o) ok |= b[1] == 24 + 3 + SC[1][d] + 12 * o;
+                CHECK(ok);
+                if (!first_seen) { CHECK((b[1] - 27) % 12 == 0); first_seen = 1; }   /* Play: step 1, the root */
+                same_note_slides += open[b[1]] > 0;     /* a note-on over itself: a same-note slide */
+                open[b[1]] = 1;
+            } else if (b[0] == 0x80) {
+                open[b[1]] = 0;                          /* Open303: one note-off releases the key */
+            }
+        }
+        for (int nn = 0; nn < 128; ++nn) CHECK(open[nn] == 0);      /* nothing left hanging */
+        int kinds = 0;
+        for (int s = 0; s < ACID8_STYLES; ++s) kinds += styles[s] > 0;
+        printf("8-step NEW while playing: %d note-ons (%d same-note slides), %d of 5 styles heard\n",
+               ons, same_note_slides, kinds);
+        CHECK(ons > 40 && kinds >= 3);
+    }
+
+    /* Eight banks, eight different 8-step lines; a 16-step bank beside them. */
+    {
+        static char saved[8][512], got8[512];
+        for (int bnk = 0; bnk < 8; ++bnk) {
+            if (bnk == 7) { tb_engine_set(eng, "length", "16"); }
+            tb_engine_set(eng, "generate", "0");
+            tb_engine_get(eng, "pattern", saved[bnk], sizeof saved[bnk]);
+            char idx[16]; snprintf(idx, sizeof idx, "%d", bnk);
+            tb_engine_set(eng, "store_bank", idx);
+            for (int j = 0; j < bnk; ++j) CHECK(strcmp(saved[j], saved[bnk]) != 0);
+        }
+        CHECK(!strncmp(saved[0], "8|", 2) && !strncmp(saved[7], "16|", 3));
+        tb_engine_set(eng, "length", "8");
+        for (int k = 0; k < 3; ++k) tb_engine_set(eng, "generate", "0");    /* something else on top */
+        for (int bnk = 7; bnk >= 0; --bnk) {
+            char idx[16]; snprintf(idx, sizeof idx, "%d", bnk);
+            tb_engine_set(eng, "recall_bank_now", idx);
+            tb_engine_get(eng, "pattern", got8, sizeof got8);
+            CHECK(!strcmp(got8, saved[bnk]));     /* length included */
+        }
+        /* Through the state text and into another engine: the same eight. */
+        static char st_a[2048], st_b[2048];
+        CHECK(tb_engine_state_write(eng, st_a, sizeof st_a) > 0);
+        tb_engine *copy = tb_engine_create(&(tb_engine_io){0});
+        CHECK(copy && tb_engine_state_read(copy, st_a) == 1);
+        CHECK(tb_engine_state_write(copy, st_b, sizeof st_b) > 0 && !strcmp(st_a, st_b));
+        for (int bnk = 0; bnk < 8; ++bnk) {
+            char idx[16]; snprintf(idx, sizeof idx, "%d", bnk);
+            tb_engine_set(copy, "recall_bank_now", idx);
+            tb_engine_get(copy, "pattern", got8, sizeof got8);
+            CHECK(!strcmp(got8, saved[bnk]));
+        }
+        tb_engine_destroy(copy);
+        tb_engine_set(eng, "recall_bank_now", "0");
+    }
+
     /* --- state: text, and transactional ---------------------------------------------- */
     static char a[2048], b[2048], bad[2048];
     const int n = tb_engine_state_write(eng, a, sizeof a);
@@ -197,7 +319,7 @@ int main(void) {
     static char va[2048], vb[2048];
     tb_engine_get(eng, "pattern", va, sizeof va); tb_engine_get(twin, "pattern", vb, sizeof vb);
     CHECK(!strcmp(va, vb));
-    CHECK(tb_engine_view(twin, vb, sizeof vb) > 0 && strstr(vb, ",24,"));     /* its length came with it */
+    CHECK(tb_engine_view(twin, vb, sizeof vb) > 0 && strstr(vb, ",8,"));      /* its length came with it */
     /* Every single-character corruption is either refused (nothing changes)
      * or accepted as a valid state -- never a crash, never a half-applied one. */
     unsigned seed = 1;

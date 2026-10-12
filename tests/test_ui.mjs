@@ -220,6 +220,14 @@ check(eq(seqWrites(), [["recall_bank", "2"]]) && eq(env.overlays.at(-1), ["Bank 
 seqWrites().length = 0;
 pad(68); pad(69); pad(70);
 check(eq(seqWrites(), [["generate", "0"], ["mutate", "1"], ["direction", "1"]]), "NEW / MUT / DIR: " + JSON.stringify(seqWrites()));
+/* NEW at Length 8 is the same press, the same write: the DSP decides how to
+ * generate (tb_engine.c), so the surface does not change. */
+store.seq.set("length", 8); ticks(VIEW_EVERY_TICKS + 1);
+seqWrites().length = 0;
+pad(68);
+check(eq(seqWrites(), [["generate", "0"]]) && eq(env.overlays.at(-1), ["Pattern", "regenerated"]),
+      "NEW at 8 steps: same pad, same write, same overlay: " + JSON.stringify(seqWrites()));
+store.seq.set("length", 16); ticks(VIEW_EVERY_TICKS + 1);
 check(ui.state.controller.state.values.direction === "1", "the DIR pad is told to the grid's Direction cell");
 seqWrites().length = 0;
 for (const n of [71, 72, 73, 74, 75]) pad(n);

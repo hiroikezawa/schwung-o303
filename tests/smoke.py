@@ -120,6 +120,15 @@ def view(inst=None):
             "transpose": int(f[7]), "undo": int(f[8]), "steps": steps}
 
 
+def view_of(raw):
+    bpm, rest = raw.split(";")
+    head, steps = rest.split("|")
+    f = head.split(",")
+    return {"bpm": int(bpm), "pos": int(f[0]), "running": int(f[1]), "bank": int(f[2]),
+            "pending": int(f[3]), "filled": f[4], "length": int(f[5]), "dir": int(f[6]),
+            "transpose": int(f[7]), "undo": int(f[8]), "steps": steps}
+
+
 def rms(x):
     return math.sqrt(sum(v * v for v in x) / max(1, len(x)))
 
@@ -382,6 +391,67 @@ for bad_doc in ("", "{", "{}", '{"v":2}', state[:-1], state.replace('"v":1', '"v
 write("state", state.replace('{"v":1', '{"v":1,"future":3'), q)
 assert read("state", inst=q) == state
 destroy(q)
+
+# --- NEW at Length 8: the acid line generator, through the plugin -----------------
+p8 = create(b".", None)
+for k, v in (("length", "8"), ("root", 3), ("scale", 1), ("octaves", 2), ("volume", 0.6)):
+    write(k, v, p8)
+before = view(p8)["steps"]
+write("generate", 0, p8)
+v8 = view(p8)
+assert v8["length"] == 8 and v8["steps"] != before and v8["steps"][0] != "0" and v8["undo"] == 1, v8
+write("undo", 1, p8)
+assert view(p8)["steps"] == before, "Undo brings back the pattern before NEW"
+# It plays, NEW on the fly included.
+c8 = Clock(p8)
+c8.play()
+heard = []
+for k in range(8):
+    write("generate", 0, p8)
+    heard += c8.run(0.5)
+c8.stop(); c8.run(1.5)
+assert rms(heard) > 300 and set(c8.run(0.2)) == {6}, "plays, and stops clean"
+# Eight banks, eight lines; a 16-step one in bank 8.
+saved = []
+for bnk in range(8):
+    if bnk == 7:
+        write("length", "16", p8)
+    write("generate", 0, p8)
+    write("store_bank", bnk, p8)
+    saved.append(view(p8)["steps"])
+assert len(set(saved)) == 8 and [len(x) for x in saved] == [8] * 7 + [16]
+assert view(p8)["filled"] == "11111111"
+write("length", "8", p8)
+for _ in range(3):
+    write("generate", 0, p8)
+for bnk in range(8):
+    write("recall_bank_now", bnk, p8)
+    assert view(p8)["steps"] == saved[bnk], bnk
+# Through Schwung's state, into a new instance: all eight come back.
+doc = read("state", inst=p8)
+p9 = create(b".", None)
+write("state", doc, p9)
+assert read("state", inst=p9) == doc
+for bnk in range(8):
+    write("recall_bank_now", bnk, p9)
+    assert view(p9)["steps"] == saved[bnk], bnk
+destroy(p9); destroy(p8)
+
+# --- states saved by v0.3.0 (before 8-step NEW) load unchanged ------------------------
+fixture = json.loads((MODULE / "tests/fixtures/state_v030.json").read_text())
+for old in fixture["states"]:
+    q = create(b".", None)
+    write("state", old["state"], q)
+    assert read("state", inst=q) == old["state"], old["length"]
+    # The pattern, banks and settings are the same; the playhead and Undo are
+    # not saved by design (a restored slot has nothing to undo yet).
+    keep = lambda v: {k: v[k] for k in ("bank", "pending", "filled", "length", "dir", "transpose", "steps")}
+    assert keep(view(q)) == keep(view_of("0;" + old["seq_view"])), old["length"]
+    # And NEW at its length is still TB-3PO's own (16/24/32): it never writes
+    # an 8-step line there.
+    write("generate", 0, q)
+    assert view(q)["length"] == old["length"]
+    destroy(q)
 
 # --- incoming notes are not the sequencer's: ignored -----------------------------------
 clock.run(2.0)

@@ -21,6 +21,11 @@
  *
  * tb3po.c carries two sequencers ("slots" A and B). This module has one 303,
  * so A is the sequencer and B's notes are dropped.
+ *
+ * ONE VERB IS ANSWERED HERE INSTEAD OF BY tb3po.c: `generate` (the NEW pad)
+ * while the pattern is 8 steps long writes an acid8.c line rather than
+ * TB-3PO's per-step dice. At 16, 24 and 32 steps -- and for every other verb,
+ * MUT included -- tb3po.c answers as it always has.
  */
 #include <stdatomic.h>
 #include <stdint.h>
@@ -32,6 +37,7 @@
 #include <unistd.h>
 
 #include "tb_engine.h"
+#include "acid8.h"
 
 static void *tb_pool_take(size_t bytes);
 static void tb_pool_give(void *p);
@@ -53,6 +59,9 @@ static void tb_pool_give(void *p);
 #undef mkdir
 
 _Static_assert(ATOMIC_INT_LOCK_FREE == 2, "instance pool needs lock-free atomics");
+_Static_assert((int)ACID8_REST == (int)STEP_REST && (int)ACID8_NOTE == (int)STEP_NOTE &&
+               (int)ACID8_ACCENT == (int)STEP_ACCENT && (int)ACID8_SLIDE == (int)STEP_SLIDE,
+               "acid8 writes TB-3PO's own step kinds");
 
 /* Four chain slots can each hold one; spares cover a swap in flight. */
 #define TB_INSTANCES 6
@@ -151,6 +160,41 @@ void tb_engine_block(tb_engine *e, int frames) {
     tb_cur = NULL;
 }
 
+/*
+ * NEW at Length 8: tb3po.c's own `generate`, step for step, except for the
+ * generator it calls. The undo snapshot is taken first (so Undo brings the
+ * previous pattern back), the next seed comes from the slot's own random
+ * stream exactly as tb3po.c draws it, and the result is written into the
+ * slot's live pattern -- the arrays a bank stores and the state blob saves --
+ * in TB-3PO's own representation: step kind, scale degree, octave index.
+ * Steps 9-32 are left alone, as tb3po.c leaves the steps past the length.
+ */
+static void tb_generate8(tb_engine *e) {
+    tb3po_slot_t *s = &e->inst.slots[TB_SEQ];
+    snapshot_undo(s);
+    s->seed = rng_next_u32(s);
+    s->rng = s->seed ? s->seed : 1;
+    const scale_t *sc = &SCALES[s->scale];
+    const acid8_in in = {sc->degrees, sc->len, s->octave_range, s->density, s->accent, s->slide};
+    acid8_out out;
+    acid8_generate(&in, s->seed, -1, &out);
+    for (int i = 0; i < ACID8_STEPS; ++i) {
+        s->steps[i] = out.steps[i];
+        s->degrees[i] = out.degrees[i];
+        s->octaves[i] = out.octaves[i];
+    }
+}
+
+int tb_engine_generate8_style(const tb_engine *e) {
+    if (!e) return -1;
+    const tb3po_slot_t *s = &e->inst.slots[TB_SEQ];
+    const scale_t *sc = &SCALES[s->scale];
+    const acid8_in in = {sc->degrees, sc->len, s->octave_range, s->density, s->accent, s->slide};
+    acid8_out out;
+    acid8_generate(&in, s->seed, -1, &out);
+    return out.style;
+}
+
 void tb_engine_set(tb_engine *e, const char *key, const char *val) {
     if (!e || !key) return;
     /* The channels are how A is told from B; they are not a setting here. */
@@ -163,6 +207,11 @@ void tb_engine_set(tb_engine *e, const char *key, const char *val) {
         const int n = val ? sscanf(val, "%d:%d:%d:%d", &idx, &kind, &deg, &oct) : 0;
         if (n < 2 || idx < 0 || idx >= MAX_STEPS || kind < 0 || kind > 3 ||
             deg < 0 || deg > 6 || oct < 0 || oct > 2) return;
+    }
+    if (!strcmp(key, "generate") && e->inst.slots[TB_SEQ].length == ACID8_STEPS) {
+        tb_generate8(e);
+        e->inst.state_dirty = 1;
+        return;
     }
     tb_cur = e;
     e->api->set_param(&e->inst, key, val);

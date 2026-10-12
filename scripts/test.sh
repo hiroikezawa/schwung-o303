@@ -17,8 +17,14 @@ OUT="$MODULE/build/native"
 "${CC:-gcc}" -std=c11 -D_DEFAULT_SOURCE -O1 -Wall -Wextra -Wno-unused-parameter -Werror "${SAN[@]}" \
   -DTB3PO_STATE_DIR="\"$OUT\"" -DTB3PO_STATE_PATH_FOR_TEST="\"$OUT/tb3po.bin\"" \
   -I"$V" -I"$MODULE/dsp" "$MODULE/tests/test_engine.c" "$MODULE/tests/ref_tb3po.c" "$MODULE/dsp/tb_engine.c" \
+  "$MODULE/dsp/acid8.c" \
   -o "$OUT/test-engine" -lpthread
 "$OUT/test-engine"
+
+# NEW at Length 8: the acid line generator on its own, every rule it promises.
+"${CC:-gcc}" -std=c11 -O1 -Wall -Wextra -Werror "${SAN[@]}" -I"$MODULE/dsp" \
+  "$MODULE/tests/test_acid8.c" "$MODULE/dsp/acid8.c" -o "$OUT/test-acid8"
+"$OUT/test-acid8"
 
 # The second VCO against the unmodified Open303, built from this run's objects.
 "${CXX:-g++}" -std=c++17 -U_GNU_SOURCE -D_DEFAULT_SOURCE -O2 -fno-strict-aliasing -Wall -Wextra -Wno-unused-parameter \
