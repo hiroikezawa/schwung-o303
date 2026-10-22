@@ -59,9 +59,9 @@ const FOOTER_BAND = { y: 57, h: 7 };
 const MAP_TOP = 13, CELL_W = 16, BAND_H = 9, ACT_H = 13;
 const ACT_Y = MAP_TOP + 3 * BAND_H;
 /* A cell is 16px and its divider owns one column, so a label has 14: "GEN"
- * measures 14 where "NEW" measures 15. Pads 4 and 5 are TB-3PO's Ch- / Ch+,
- * unused here (seq_pads.mjs). */
-export const ACTION_LABELS = ["GEN", "MUT", "DIR", "", "", "", "", ""];
+ * measures 14 where "NEW" measures 15. Pads 4 and 5 are where TB-3PO has
+ * Ch- / Ch+; here they move the phrase OUT / IN (seq_pads.mjs). */
+export const ACTION_LABELS = ["GEN", "MUT", "DIR", "OUT", "IN", "", "", ""];
 
 export const KEY_ROWS = [
     [["+ -", "octave"],     ["< >", "step pg"]],

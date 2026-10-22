@@ -95,6 +95,21 @@ static void same_get(const char *key) {
     if (na != nb || strcmp(a, b)) { fprintf(stderr, "FAIL get %s: '%s' vs '%s'\n", key, a, b); exit(1); }
 }
 
+/* "len|steps|degs|octs" -> arrays. */
+static int read_pattern(tb_engine *e, int *kind, int *deg, int *oct) {
+    static char buf[512];
+    CHECK(tb_engine_get(e, "pattern", buf, sizeof buf) > 0);
+    char *p = buf;
+    const int len = (int)strtol(p, &p, 10);
+    int *arr[3] = {kind, deg, oct};
+    for (int a = 0; a < 3; ++a) {
+        CHECK(*p == '|');
+        ++p;
+        for (int i = 0; i < len; ++i) { arr[a][i] = (int)strtol(p, &p, 10); if (*p == ',') ++p; }
+    }
+    return len;
+}
+
 static void compare(const char *what) {
     if (ref_n != eng_n) { fprintf(stderr, "FAIL %s: %d vs %d events\n", what, ref_n, eng_n); exit(1); }
     for (int i = 0; i < ref_n; ++i)
@@ -304,6 +319,157 @@ int main(void) {
             CHECK(!strcmp(got8, saved[bnk]));
         }
         tb_engine_destroy(copy);
+        tb_engine_set(eng, "recall_bank_now", "0");
+    }
+
+    /* --- OUT / IN (pads 4 and 5): one note, one scale step ---------------------------- */
+    {
+        const int *sc = SC[0];                   /* Minor */
+        const int scl = SC_LEN[0];
+        tb_engine_set(eng, "scale", "0");
+        tb_engine_set(eng, "octaves", "2");
+        tb_engine_set(eng, "length", "16");
+        unsigned rs = 5;
+        int kind[32], deg[32], oct[32], k2[32], d2[32], o2[32];
+        int out_moves = 0, in_moves = 0, out_up = 0, out_down = 0;
+        for (int round = 0; round < 300; ++round) {
+            /* A fresh phrase: rests, notes, accents, slides at random pitches. */
+            for (int i = 0; i < 16; ++i) {
+                rs = rs * 1664525u + 1013904223u;
+                char v[32];
+                snprintf(v, sizeof v, "%d:%u:%u:%u", i, (rs >> 8) % 4, (rs >> 12) % 7, (rs >> 16) % 2);
+                tb_engine_set(eng, "set_step", v);
+            }
+            const int is_out = round & 1;
+            for (int press = 0; press < 12; ++press) {
+                const int len = read_pattern(eng, kind, deg, oct);
+                CHECK(len == 16);
+                int n = 0, hi = -1, lo = 1000;
+                long sum = 0;
+                for (int i = 0; i < len; ++i) if (kind[i]) {
+                    const int p = sc[deg[i]] + 12 * oct[i];
+                    sum += p; ++n;
+                    if (p > hi) hi = p;
+                    if (p < lo) lo = p;
+                }
+                tb_engine_set(eng, is_out ? "spread" : "focus", "1");
+                read_pattern(eng, k2, d2, o2);
+                int changed = -1, count = 0;
+                for (int i = 0; i < 32; ++i) {
+                    if (i < len) CHECK(k2[i] == kind[i]);                    /* kinds never change */
+                    if (i < len && (d2[i] != deg[i] || o2[i] != oct[i])) { changed = i; ++count; }
+                }
+                CHECK(count <= 1);                                           /* one note at most */
+                if (count == 0) {
+                    /* Only when nothing could move: IN on a phrase of one pitch. */
+                    if (!is_out) CHECK(n < 2 || hi == lo);
+                    else CHECK(n == 0);
+                    continue;
+                }
+                const int i = changed;
+                CHECK(kind[i] != 0 && o2[i] >= 0 && o2[i] < 2 && d2[i] >= 0 && d2[i] < scl);
+                const int before = sc[deg[i]] + 12 * oct[i], after = sc[d2[i]] + 12 * o2[i];
+                /* exactly one scale step: no degree of the scale lies between */
+                const int up = after > before;
+                for (int dd = 0; dd < scl; ++dd)
+                    for (int oo = 0; oo < 2; ++oo) {
+                        const int q = sc[dd] + 12 * oo;
+                        CHECK(!(q > (up ? before : after) && q < (up ? after : before)));
+                    }
+                CHECK(after != before);
+                if (is_out) {
+                    ++out_moves;
+                    /* Away from the median -- unless the note sits at the edge of
+                     * the range and could not, when it bounces back one step. */
+                    int nb = 0, na = 0;
+                    for (int j = 0; j < len; ++j) if (kind[j]) {
+                        const int q = sc[deg[j]] + 12 * oct[j];
+                        nb += q < before;
+                        na += q > before;
+                    }
+                    const int floor_ = deg[i] == 0 && oct[i] == 0, ceil_ = deg[i] == scl - 1 && oct[i] == 1;
+                    if (nb > na) CHECK(up || ceil_);                         /* more below: further up */
+                    if (nb < na) CHECK(!up || floor_);                       /* more above: further down */
+                    up ? ++out_up : ++out_down;
+                } else {
+                    ++in_moves;
+                    CHECK(before == hi || before == lo);                     /* an extreme ... */
+                    const long dhi = (long)hi * n - sum, dlo = sum - (long)lo * n;
+                    if (dhi > dlo) CHECK(before == hi && !up);               /* ... the further one, inward */
+                    if (dlo > dhi) CHECK(before == lo && up);
+                }
+            }
+            /* Undo takes the last move back. */
+            read_pattern(eng, kind, deg, oct);
+            tb_engine_set(eng, is_out ? "spread" : "focus", "1");
+            read_pattern(eng, k2, d2, o2);
+            int moved = 0;
+            for (int i = 0; i < 16; ++i) moved |= d2[i] != deg[i] || o2[i] != oct[i];
+            if (moved) {
+                tb_engine_set(eng, "undo", "1");
+                read_pattern(eng, k2, d2, o2);
+                for (int i = 0; i < 16; ++i) CHECK(d2[i] == deg[i] && o2[i] == oct[i]);
+            }
+        }
+        printf("OUT moves %d (up %d, down %d), IN moves %d\n", out_moves, out_up, out_down, in_moves);
+        CHECK(out_moves > 1500 && out_up > 300 && out_down > 300 && in_moves > 1000);
+        /* IN, pressed enough, gathers the phrase onto one pitch and then stops. */
+        for (int i = 0; i < 16; ++i) {
+            char v[32];
+            snprintf(v, sizeof v, "%d:1:%d:%d", i, (i * 3) % 7, i % 2);
+            tb_engine_set(eng, "set_step", v);
+        }
+        int span = 1000;
+        for (int press = 0; press < 400; ++press) {
+            tb_engine_set(eng, "focus", "1");
+            read_pattern(eng, kind, deg, oct);
+            int hi = -1, lo = 1000;
+            for (int i = 0; i < 16; ++i) { const int p = sc[deg[i]] + 12 * oct[i]; if (p > hi) hi = p; if (p < lo) lo = p; }
+            CHECK(hi - lo <= span);                                          /* never wider */
+            span = hi - lo;
+        }
+        CHECK(span <= 2);
+        /* OUT on an acid line -- mostly the root of the lowest octave -- moves
+         * every note, the roots included, not one or two of them over and over. */
+        tb_engine_set(eng, "length", "8");
+        int spread_raised = 0;
+        for (int round = 0; round < 50; ++round) {
+            for (int i = 0; i < 8; ++i) {
+                char v[32];
+                snprintf(v, sizeof v, "%d:%d:%d:0", i, i == 3 ? 0 : 1, i == 5 ? 4 : 0);
+                tb_engine_set(eng, "set_step", v);
+            }
+            int moved[8] = {0};
+            for (int press = 0; press < 40; ++press) {
+                read_pattern(eng, kind, deg, oct);
+                tb_engine_set(eng, "spread", "1");
+                read_pattern(eng, k2, d2, o2);
+                int count = 0;
+                for (int i = 0; i < 8; ++i)
+                    if (d2[i] != deg[i] || o2[i] != oct[i]) { moved[i] = 1; ++count; }
+                CHECK(count == 1);                                           /* every press moves a note */
+            }
+            int steps_moved = 0;
+            for (int i = 0; i < 8; ++i) steps_moved += moved[i];
+            CHECK(!moved[3] && steps_moved >= 6);                            /* a rest never; most notes do */
+            /* ... and it is the PHRASE that widens: several notes end above the
+             * root, not one note climbing alone (what a mean did). */
+            read_pattern(eng, kind, deg, oct);
+            int raised = 0;
+            for (int i = 0; i < 8; ++i) raised += kind[i] && (deg[i] || oct[i]);
+            spread_raised += raised;
+        }
+        printf("OUT x40 on a root-heavy line: %.1f of 7 notes end above the root\n", spread_raised / 50.0);
+        CHECK(spread_raised >= 50 * 4);
+        tb_engine_set(eng, "length", "16");
+        /* OUT never leaves the octaves allowed, however often it is pressed. */
+        for (int press = 0; press < 400; ++press) tb_engine_set(eng, "spread", "1");
+        read_pattern(eng, kind, deg, oct);
+        for (int i = 0; i < 16; ++i) CHECK(oct[i] >= 0 && oct[i] < 2);
+        /* An all-rest phrase: nothing to move, nothing breaks. */
+        for (int i = 0; i < 16; ++i) { char v[16]; snprintf(v, sizeof v, "%d:0", i); tb_engine_set(eng, "set_step", v); }
+        tb_engine_set(eng, "spread", "1");
+        tb_engine_set(eng, "focus", "1");
         tb_engine_set(eng, "recall_bank_now", "0");
     }
 

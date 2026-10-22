@@ -18,12 +18,19 @@
  *   row 2 (84-91)              steps 9-16
  *   row 1 (76-83)              banks 1-8: tap recalls (at the bar line while
  *                              playing), Shift+tap saves
- *   row 0 (68-75)              NEW  MUT  DIR  -  -  -  -  -
+ *   row 0 (68-75)              NEW  MUT  DIR  OUT  IN  -  -  -
  *
  * THE ONE DIFFERENCE: TB-3PO's pads 4 and 5 are Ch- / Ch+, the MIDI channel
  * its notes leave on. Here the notes go to the 303 inside this module and
- * there is no channel to choose, so those two pads are dark and do nothing --
- * they are not given a new meaning.
+ * there is no channel to choose, so those two pads are this module's own:
+ *
+ *   OUT (pad 4)   a random note of the phrase moves one scale step AWAY from
+ *                 the phrase's mean pitch (up if above it, down if below)
+ *   IN  (pad 5)   the highest or lowest note -- whichever is further from the
+ *                 mean -- moves one scale step TOWARD it
+ *
+ * The moves are made by the DSP (tb_engine.c `spread` / `focus`), which
+ * knows the scale and the octaves allowed; Undo takes one back.
  */
 
 export const STEP_REST = 0, STEP_NOTE = 1, STEP_ACCENT = 2, STEP_SLIDE = 3;
@@ -135,7 +142,15 @@ export function padPress(seq, note, mods = {}) {
                 out.changed.push("direction");
                 out.overlay = ["Direction", DIRECTIONS[seq.direction] || "?"];
                 break;
-            default: break;                       /* 3, 4: TB-3PO's Ch- / Ch+ -- see the header */
+            case 3:                               /* TB-3PO's Ch- -- see the header */
+                out.writes.push(["spread", "1"]);
+                out.overlay = ["Phrase", "out"];
+                break;
+            case 4:                               /* TB-3PO's Ch+ */
+                out.writes.push(["focus", "1"]);
+                out.overlay = ["Phrase", "in"];
+                break;
+            default: break;
         }
     }
     return out;
@@ -174,7 +189,8 @@ export function padColor(seq, note, mods = {}) {
         if (col === seq.currentBank) return LED.PURPLE;
         return seq.bankFilled[col] ? LED.TEAL : LED.OFF;
     }
-    return col === 0 ? LED.TEAL : col === 1 ? LED.INDIGO : col === 2 ? LED.ORANGE : LED.OFF;
+    return col === 0 ? LED.TEAL : col === 1 ? LED.INDIGO : col === 2 ? LED.ORANGE
+         : col === 3 ? LED.GREEN : col === 4 ? LED.BLUE : LED.OFF;
 }
 
 /**

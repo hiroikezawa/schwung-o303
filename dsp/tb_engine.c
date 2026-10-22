@@ -26,6 +26,10 @@
  * while the pattern is 8 steps long writes an acid8.c line rather than
  * TB-3PO's per-step dice. At 16, 24 and 32 steps -- and for every other verb,
  * MUT included -- tb3po.c answers as it always has.
+ *
+ * TWO VERBS ARE THIS MODULE'S OWN, for the bottom row's pads 4 and 5 (where
+ * TB-3PO has its MIDI channel buttons): `spread` and `focus` move one note of
+ * the phrase by one step of the scale -- see tb_spread / tb_focus.
  */
 #include <stdatomic.h>
 #include <stdint.h>
@@ -185,6 +189,108 @@ static void tb_generate8(tb_engine *e) {
     }
 }
 
+/* ---- OUT / IN: one note of the phrase, one scale step ------------------------ *
+ * "The phrase" is the sounding steps (note, accent, slide) inside Length.
+ * A step's pitch is its scale degree plus 12 per octave index, as TB-3PO
+ * computes it; a move is one step of the current scale, up or down -- what
+ * a semitone nudge becomes once quantized to the scale -- carrying into the
+ * next octave index at the ends, never past the octaves Octaves allows.
+ * Only the degree and octave change: the step keeps its kind (accent, slide)
+ * and its place. Undo restores the phrase from before the move.
+ */
+static int tb_degree(const tb3po_slot_t *s, const scale_t *sc, int i) {
+    return s->degrees[i] < sc->len ? s->degrees[i] : sc->len - 1;
+}
+
+static int tb_pitch(const tb3po_slot_t *s, const scale_t *sc, int i) {
+    return sc->degrees[tb_degree(s, sc, i)] + 12 * s->octaves[i];
+}
+
+/* Step i one scale degree in `dir`; 0 (and nothing written) if that leaves
+ * the octaves allowed. */
+static int tb_scale_step(const tb3po_slot_t *s, const scale_t *sc, int i, int dir, uint8_t *deg, uint8_t *oct) {
+    int d = tb_degree(s, sc, i) + dir, o = s->octaves[i];
+    if (d >= sc->len) { d = 0; ++o; }
+    if (d < 0) { d = sc->len - 1; --o; }
+    if (o < 0 || o >= s->octave_range) return 0;
+    *deg = (uint8_t)d;
+    *oct = (uint8_t)o;
+    return 1;
+}
+
+static int tb_sounding(const tb3po_slot_t *s, int *idx) {
+    int n = 0;
+    for (int i = 0; i < s->length && i < MAX_STEPS; ++i)
+        if (s->steps[i] != STEP_REST) idx[n++] = i;
+    return n;
+}
+
+static void tb_apply_move(tb3po_slot_t *s, int i, uint8_t deg, uint8_t oct) {
+    snapshot_undo(s);
+    s->degrees[i] = deg;
+    s->octaves[i] = oct;
+}
+
+/* OUT (pad 4): a random note of the phrase -- every sounding step as likely
+ * as any other -- moves AWAY from the middle of the phrase: up if more of the
+ * phrase lies below it than above, down if more lies above, either way (at
+ * random) if as much lies on each side. The middle is the MEDIAN, not the
+ * mean: one note far out drags a mean with it, so every other note read as
+ * "below" and was pushed back down while that one note alone kept climbing.
+ * A note at the edge of the range (the root of the lowest octave, which is
+ * where most acid lines live, or the top of the top octave) cannot go
+ * further out, so it goes one step the other way instead: the note picked is
+ * the note that changes. */
+static int tb_spread(tb3po_slot_t *s) {
+    const scale_t *sc = &SCALES[s->scale];
+    int idx[MAX_STEPS];
+    const int n = tb_sounding(s, idx);
+    if (n < 1) return 0;
+    const int i = idx[rng_next_u32(s) % (uint32_t)n];
+    const int p = tb_pitch(s, sc, i);
+    int below = 0, above = 0;
+    for (int k = 0; k < n; ++k) {
+        const int q = tb_pitch(s, sc, idx[k]);
+        below += q < p;
+        above += q > p;
+    }
+    const int dir = below > above ? 1 : below < above ? -1 : (rng_next_u32(s) & 1 ? 1 : -1);
+    uint8_t deg, oct;
+    if (!tb_scale_step(s, sc, i, dir, &deg, &oct) && !tb_scale_step(s, sc, i, -dir, &deg, &oct)) return 0;
+    tb_apply_move(s, i, deg, oct);
+    return 1;
+}
+
+/* IN (pad 5): the phrase's highest or lowest note -- whichever lies further
+ * from the mean, a coin toss when they are as far -- moves one scale step
+ * TOWARD the mean. Where that pitch occurs on several steps, one of them,
+ * at random. A phrase of one pitch is left alone. */
+static int tb_focus(tb3po_slot_t *s) {
+    const scale_t *sc = &SCALES[s->scale];
+    int idx[MAX_STEPS];
+    const int n = tb_sounding(s, idx);
+    if (n < 2) return 0;
+    long sum = 0;
+    int hi = -1000, lo = 1000;
+    for (int k = 0; k < n; ++k) {
+        const int p = tb_pitch(s, sc, idx[k]);
+        sum += p;
+        if (p > hi) hi = p;
+        if (p < lo) lo = p;
+    }
+    if (hi == lo) return 0;
+    const long up = (long)hi * n - sum, down = sum - (long)lo * n;   /* distances to the mean, x n */
+    const int top = up > down ? 1 : up < down ? 0 : (int)(rng_next_u32(s) & 1);
+    const int target = top ? hi : lo, dir = top ? -1 : 1;
+    int cand[MAX_STEPS], m = 0;
+    for (int k = 0; k < n; ++k) if (tb_pitch(s, sc, idx[k]) == target) cand[m++] = idx[k];
+    const int i = cand[rng_next_u32(s) % (uint32_t)m];
+    uint8_t deg, oct;
+    if (!tb_scale_step(s, sc, i, dir, &deg, &oct)) return 0;
+    tb_apply_move(s, i, deg, oct);
+    return 1;
+}
+
 int tb_engine_generate8_style(const tb_engine *e) {
     if (!e) return -1;
     const tb3po_slot_t *s = &e->inst.slots[TB_SEQ];
@@ -207,6 +313,11 @@ void tb_engine_set(tb_engine *e, const char *key, const char *val) {
         const int n = val ? sscanf(val, "%d:%d:%d:%d", &idx, &kind, &deg, &oct) : 0;
         if (n < 2 || idx < 0 || idx >= MAX_STEPS || kind < 0 || kind > 3 ||
             deg < 0 || deg > 6 || oct < 0 || oct > 2) return;
+    }
+    if (!strcmp(key, "spread") || !strcmp(key, "focus")) {
+        if (key[0] == 's' ? tb_spread(&e->inst.slots[TB_SEQ]) : tb_focus(&e->inst.slots[TB_SEQ]))
+            e->inst.state_dirty = 1;
+        return;
     }
     if (!strcmp(key, "generate") && e->inst.slots[TB_SEQ].length == ACID8_STEPS) {
         tb_generate8(e);

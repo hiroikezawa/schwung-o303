@@ -163,7 +163,6 @@ goTo("Devilfish");
 check(ui.keyForKnob(0) === "devil_mod_switch" && ui.keyForKnob(6) === "tanh_shaper_drive" && ui.keyForKnob(7) === null, "Devilfish: " + keysShown());
 goTo("Pads");
 check(keysShown().every((k) => k === null), "Pads: no knob is live");
-check(eq(ACTION_LABELS.filter(Boolean), ["GEN", "MUT", "DIR"]), "the pad map names the three action pads");
 show("Pads");
 goTo("Keys");
 show("Keys");
@@ -230,8 +229,12 @@ check(eq(seqWrites(), [["generate", "0"]]) && eq(env.overlays.at(-1), ["Pattern"
 store.seq.set("length", 16); ticks(VIEW_EVERY_TICKS + 1);
 check(ui.state.controller.state.values.direction === "1", "the DIR pad is told to the grid's Direction cell");
 seqWrites().length = 0;
-for (const n of [71, 72, 73, 74, 75]) pad(n);
-check(seqWrites().length === 0, "pads 4-8 of the action row do nothing (TB-3PO's Ch-/Ch+ have no meaning here)");
+pad(71); pad(72);
+check(eq(seqWrites(), [["spread", "1"], ["focus", "1"]]), "OUT / IN: " + JSON.stringify(seqWrites()));
+check(eq(env.overlays.at(-1), ["Phrase", "in"]), "IN says what it did");
+seqWrites().length = 0;
+for (const n of [73, 74, 75]) pad(n);
+check(seqWrites().length === 0, "pads 6-8 of the action row do nothing");
 ticks(8);
 check([env.leds[78], padColorAt(78, 1)].includes(LED.YELLOW), "a queued bank flashes yellow");
 store.seq.barLine(); store.seq.running = 0;          /* the bar line: the queued recall lands */
@@ -241,7 +244,9 @@ store.seq.steps[0] = 1; store.seq.steps[1] = 2; store.seq.steps[2] = 3; store.se
 ticks(4);
 check(env.leds[92] === LED.WHITE && env.leds[93] === LED.RED && env.leds[94] === LED.BLUE && env.leds[95] === LED.OFF,
       "white note / red accent / blue slide / dark rest");
-check(env.leds[68] === LED.TEAL && env.leds[69] === LED.INDIGO && env.leds[70] === LED.ORANGE && env.leds[71] === LED.OFF, "action row colours");
+check(env.leds[68] === LED.TEAL && env.leds[69] === LED.INDIGO && env.leds[70] === LED.ORANGE &&
+      env.leds[71] === LED.GREEN && env.leds[72] === LED.BLUE && env.leds[73] === LED.OFF, "action row colours");
+check(eq(ACTION_LABELS.filter(Boolean), ["GEN", "MUT", "DIR", "OUT", "IN"]), "the pad map names the five action pads");
 check(env.leds[78] === LED.PURPLE, "current bank purple");
 store.seq.running = 1; store.seq.position = 1; ticks(4);
 check(env.leds[93] === LED.YELLOW, "the playing step is yellow");
@@ -404,7 +409,7 @@ const bothTicks = (n, compare) => {
         if (compare && i >= n - 9) sameLeds(compare + " (tick -" + (n - 1 - i) + ")");
     }
 };
-const CH_PADS = new Set([71, 72]);                    /* TB-3PO's Ch- / Ch+: not carried over */
+const CH_PADS = new Set([71, 72]);                    /* TB-3PO's Ch- / Ch+: OUT / IN here */
 function sameLeds(what) {
     const diff = [];
     for (let n = 68; n <= 99; n++)
@@ -469,11 +474,12 @@ step("back to 16", () => bothWorld((q) => { q.length = 16; }));
 check(script > 100, "the comparison ran");
 check(ref.seq.writes.length > 80, "and exercised the sequencer: " + ref.seq.writes.length + " writes");
 
-/* TB-3PO's two channel pads: its own writes for them never reach this module's sequencer. */
+/* TB-3PO's two channel pads are OUT / IN here: no channel write, a phrase move. */
 const n0 = mine.seq.writes.length;
 m.onMidi([0x90, 71, 100]); m.onMidi([0x80, 71, 0]); m.onMidi([0x90, 72, 100]); m.onMidi([0x80, 72, 0]);
-check(mine.seq.writes.length === n0 && padColor(makeSeq(), 71) === LED.OFF && padColor(makeSeq(), 72) === LED.OFF,
-      "Ch- / Ch+ are dark and inert here");
+check(eq(mine.seq.writes.slice(n0), [["spread", "1"], ["focus", "1"]]) &&
+      padColor(makeSeq(), 71) === LED.GREEN && padColor(makeSeq(), 72) === LED.BLUE,
+      "pads 4 / 5 are OUT / IN: " + JSON.stringify(mine.seq.writes.slice(n0)));
 
 if (failures) { console.error(`${failures} UI check(s) failed`); process.exit(1); }
 console.log(`PASS: ui (${script} gestures matched TB-3PO's ui.js, ${ref.seq.writes.length} sequencer writes)`);

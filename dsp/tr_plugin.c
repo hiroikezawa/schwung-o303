@@ -135,7 +135,9 @@ static const tr_param tr_params[P_COUNT] = {
  * through untouched (ui_core.mjs sends what TB-3PO's ui.js sends). */
 static const char *const tr_seq_verbs[] = {
     "set_step", "store_bank", "recall_bank", "recall_bank_now",
-    "generate", "mutate", "clear", "undo", 0,
+    "generate", "mutate", "clear", "undo",
+    "spread", "focus",                         /* this module's own: OUT / IN (tb_engine.c) */
+    0,
 };
 
 /* The knob grid is Schwung's own page engine, driven from ui_chain.js so the

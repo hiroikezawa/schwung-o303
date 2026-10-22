@@ -2,7 +2,7 @@
   "id": "o303",
   "name": "o303",
   "abbrev": "o303",
-  "version": "0.4.0",
+  "version": "0.5.2",
   "description": "Acid bass voice: the TB-3PO generative sequencer playing a built-in Open303 (with a hard-synced second VCO) through a RAT distortion, in one chain slot",
   "author": "Hiro Ikezawa",
   "license": "GPL-3.0-only",

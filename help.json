@@ -21,7 +21,21 @@
         "Tap recalls (at the",
         "bar when playing).",
         "Shift+tap saves.",
-        "Bottom: NEW MUT DIR."
+        "Bottom: NEW MUT DIR",
+        "OUT IN."
+      ]
+    },
+    {
+      "title": "OUT and IN",
+      "lines": [
+        "OUT (pad 4): a random",
+        "note steps one scale",
+        "note away from the",
+        "phrase's middle.",
+        "IN (pad 5): top or",
+        "bottom note steps one",
+        "scale note toward it.",
+        "Undo takes it back."
       ]
     },
     {

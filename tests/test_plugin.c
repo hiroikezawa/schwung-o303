@@ -29,6 +29,7 @@ static const char *const keys[] = {
     "feedback_hpf", "soft_attack", "slide_time", "tanh_shaper_drive",
     "vco2_level", "vco2_tune", "vco2_fine", "vco2_wave", "vco2_sync", "sync_env", "vco1_level",
     "set_step", "store_bank", "recall_bank", "recall_bank_now", "generate", "mutate", "clear", "undo",
+    "spread", "focus",
     "state", "seq_view", "chain_params", "grid_hierarchy", "ui_hierarchy", "name", "nonsense",
 };
 #define NKEYS ((int)(sizeof keys / sizeof keys[0]))
