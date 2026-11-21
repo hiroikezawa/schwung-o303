@@ -88,7 +88,7 @@ if [[ "$ARCH" == arm64 ]]; then
   python3 "$MODULE/scripts/check_abi.py" "$OUT/dsp.so"
   # A missed .mjs fails at IMPORT time on the device: a module that installs
   # cleanly and then does not open. So every one is listed, and required.
-  for f in ui_chain.js ui_core.mjs seq_pads.mjs pages.mjs help.json README.md LICENSE THIRD_PARTY_LICENSES.md; do
+  for f in ui_chain.js ui_core.mjs seq_pads.mjs pages.mjs help.json README.md README.ja.md LICENSE THIRD_PARTY_LICENSES.md; do
     [[ -f "$MODULE/$f" ]] || { echo "ERROR: $f missing -- not packaging a module that cannot load" >&2; exit 1; }
     cp "$MODULE/$f" "$OUT/"
   done

@@ -1,185 +1,282 @@
 # o303
 
-Ableton Move 用 Schwung の音源（sound generator）です。1 つのチェーンスロットの中で、次の 3 つを 1 台のアシッドベースとしてつないでいます。
+**English** | [日本語](README.ja.md)
+
+A sound generator for Schwung on Ableton Move. Inside one chain slot it wires three
+things together into a single acid bass:
 
 ```
-TB-3PO シーケンサー → Open303（+ ハードシンク付き VCO2）→ RAT ディストーション → Volume → 出力
+TB-3PO sequencer → Open303 (+ VCO2 with hard sync) → RAT distortion → Volume → output
 ```
 
-- **TB-3PO**：djphazer の O_C-Phazerville（Hemisphere Suite）にある `TB_3PO` アプレットを Schwung に移植したものです。303 風のパターンを確率で生成するシーケンサーです。
-- **Open303**：Robin Schmidt による Roland TB-303 のエミュレーションエンジンです。Devilfish 改造の拡張も含みます。
-- **RAT**：ProCo RAT ディストーションペダルの回路モデルで、RAT（LM308）と RAT2（OP07DP）を切り替えられます。
+- **TB-3PO**: a port to Schwung of the `TB_3PO` applet from djphazer's O_C-Phazerville
+  (Hemisphere Suite). A sequencer that generates 303-style patterns by probability.
+- **Open303**: Robin Schmidt's Roland TB-303 emulation engine, including the Devilfish
+  mod extensions.
+- **RAT**: a circuit model of the ProCo RAT distortion pedal, switchable between RAT
+  (LM308) and RAT2 (OP07DP).
 
-MIDI チャンネルの設定も 2 つ目のスロットも要りません。スロットに読み込むと、Move の再生に合わせて鳴ります。
+No MIDI channel setup and no second slot are needed. Load it into a slot and it plays in
+time with Move's transport.
 
-非公式のエミュレーションで、Roland・ProCo とその関係者とは無関係です。「TB-303」「RAT」は説明のために使っています。ライセンスは GPL-3.0-only です（`LICENSE`、`THIRD_PARTY_LICENSES.md`）。
+This is an unofficial emulation, not affiliated with Roland, ProCo or anyone connected
+with them. "TB-303" and "RAT" are used only for description. The licence is
+GPL-3.0-only (`LICENSE`, `THIRD_PARTY_LICENSES.md`).
 
-## 使い方（はじめての操作）
+## Getting started
 
-1. Schwung のチェーンスロットで、Sound Generator から **o303** を選びます。
-2. スロットの画面を開くと、PAD がシーケンサーの操作面に変わります。
-3. Move の **Play** を押すと、パターンが鳴り始めます。
-4. 下段左の PAD（**GEN**）を押すたびに、新しいパターンが生成されます。
-5. ノブ 2〜6（Cutoff / Resonance / Env Mod / Decay / Accent）で 303 らしい音作りをし、ノブ 7・8 で RAT の歪みとトーンを足します。
-6. 気に入ったパターンは **Shift を押しながら** 下から 3 段目の PAD をタップすると、バンク 1〜8 に保存できます。
+1. In a Schwung chain slot, choose **o303** as the Sound Generator.
+2. Open the slot's screen and the pads turn into the sequencer's control surface.
+3. Press **Play** on Move and the pattern starts.
+4. Each press of the bottom-left pad (**GEN**) generates a new pattern.
+5. Shape a 303 sound with knobs 2–6 (Cutoff / Resonance / Env Mod / Decay / Accent), and
+   add RAT distortion and tone with knobs 7 and 8.
+6. To keep a pattern you like, **hold Shift** and tap a pad on the third row from the
+   bottom to save it to banks 1–8.
 
-画面を閉じると PAD は Move に戻ります。シーケンサーは Move の再生中ずっと鳴り続けます。
+Closing the screen gives the pads back to Move. The sequencer keeps playing for as long as
+Move is playing.
 
-## 操作方法（詳細）
+## Controls (reference)
 
-### PAD（この音源の画面を開いている間）
+### Pads (while this sound generator's screen is open)
 
-| 段 | 役割 |
+| Row | Role |
 | --- | --- |
-| 最上段 | ステップ 1〜8（ステップ窓の前半） |
-| 2 段目 | ステップ 9〜16（ステップ窓の後半） |
-| 3 段目 | バンク 1〜8 |
-| 最下段 | GEN（新規生成）・MUT（変異）・DIR（再生方向）・OUT（音を外へ）・IN（音を内へ）。6〜8 番目は使いません |
+| Top | Steps 1–8 (first half of the step window) |
+| Second | Steps 9–16 (second half of the step window) |
+| Third | Banks 1–8 |
+| Bottom | GEN (generate), MUT (mutate), DIR (play direction), OUT (notes outward), IN (notes inward). Pads 6–8 are unused |
 
-- **ステップ PAD**：タップするたびに、休符 → ノート → アクセント → スライド → 休符…と切り替わります。
-  - 色は白がノート、赤がアクセント、青がスライド、消灯が休符です。
-  - 再生中のステップは黄色で光ります。
-- **バンク PAD**：タップで呼び出し、**Shift + タップ**で今のパターンを保存します。
-  - 呼び出しは、再生中なら次の小節の頭で、停止中ならすぐ切り替わります。
-  - バンクにはステップの並び・音程・パターンの長さが入ります。
-  - 色は紫が今のバンク、ティールが保存済み、消灯が空きです。呼び出し待ちのバンクは黄色で点滅し、Shift を押している間は保存先として赤とピンクで点滅します。
-- **GEN**：今の Density / Accent / Slide / Octaves の確率で、新しいパターンを作ります。Length が **8 ステップのときだけ**、8 ステップで繰り返して格好よく聴こえるアシッドベース専用の生成方法に切り替わります（下の「8 ステップの GEN」）。16 / 24 / 32 ステップでは TB-3PO 本来の生成方法のままです。
-- **MUT**：今のパターンの約 25% のステップを作り直します。
-- **DIR**：再生方向を 順方向 → 逆方向 → 往復 → ランダム の順に切り替えます。
-- **OUT**（4 番目、緑）：フレーズの中で鳴っている音からランダムに 1 つ選び、その音より低い音の方が多ければ 1 つ上のスケール音へ、高い音の方が多ければ 1 つ下のスケール音へ動かします（同じ数ならどちらかにランダム）。つまりフレーズの真ん中（中央値）から離れる向きです。平均を基準にすると、1 つだけ外れた音が平均を引っぱり、その音だけが上がり続けてしまうため、中央値を使っています。押すほどフレーズの音域が外へ広がります。
-- **IN**（5 番目、青）：フレーズの一番高い音か一番低い音のうち、平均から遠い方を、平均に近づく向きに 1 つ隣のスケール音へ動かします（同じだけ離れていればどちらかをランダムに選びます）。同じ高さの音が何か所かにあるときは、そのうちの 1 つだけを動かします。押すほど音域が内へまとまり、全部が同じ高さになると何もしなくなります。
-- OUT と IN が動かすのは音の高さだけで、ステップの種類（ノート / アクセント / スライド）と位置は変わりません。「フレーズ」は Length の範囲で鳴っているステップのことで、休符は対象外です。動かす量は、半音動かしてから今のスケールに合わせた（クオンタイズした）結果、つまりスケール上の隣の音です。Octaves の範囲は超えません。OUT で選ばれた音が下限（一番下のオクターブのルート）や上限にいて外へ動けないときは、逆向きに 1 つ動かします。選ばれた音が必ず変わるので、ルートの多いフレーズでも毎回いろいろな音が変化します。どちらも Undo で 1 回前に戻せます。
+- **Step pads**: each tap cycles rest → note → accent → slide → rest…
+  - White is a note, red an accent, blue a slide, off a rest.
+  - The playing step lights yellow.
+- **Bank pads**: tap to recall, **Shift + tap** to save the current pattern.
+  - A recall switches at the start of the next bar while playing, immediately while stopped.
+  - A bank holds the step sequence, the pitches and the pattern length.
+  - Purple is the current bank, teal a saved one, off an empty one. A bank waiting to be
+    recalled flashes yellow; while Shift is held the banks flash red and pink as save
+    targets.
+- **GEN**: makes a new pattern with the current Density / Accent / Slide / Octaves
+  probabilities. **Only when Length is 8 steps** it switches to a generation method made
+  just for acid bass that sounds good repeating over 8 steps (see "GEN at 8 steps" below).
+  At 16 / 24 / 32 steps it uses TB-3PO's own method.
+- **MUT**: regenerates about 25 % of the current pattern's steps.
+- **DIR**: cycles the play direction forward → reverse → ping-pong → random.
+- **OUT** (4th, green): picks one sounding note of the phrase at random; if more of the
+  phrase's notes are below it, it moves up one scale note, and if more are above it, down
+  one (on a tie, either way at random). In other words, away from the middle (the median)
+  of the phrase. The median is used because with the mean a single outlying note pulls
+  the mean along and that note alone keeps rising. The more you press, the wider the
+  phrase's range spreads.
+- **IN** (5th, blue): takes whichever of the phrase's highest or lowest note is further
+  from the mean and moves it one neighbouring scale note towards the mean (if both are
+  equally far, one is picked at random). If that pitch occurs in several places, only one
+  of them moves. The more you press, the tighter the range gets; once every note is the
+  same pitch it does nothing.
+- OUT and IN only move pitch; the step type (note / accent / slide) and position stay the
+  same. "The phrase" means the sounding steps within Length; rests are ignored. The amount
+  moved is the result of a semitone move quantised to the current scale, i.e. the
+  neighbouring scale note. They never leave the Octaves range. If the note OUT picks sits
+  at the lower limit (the root of the lowest octave) or the upper limit and cannot move
+  outward, it moves one step the other way. The picked note always changes, so even a
+  root-heavy phrase gets a variety of notes changed each time. Both can be undone once
+  with Undo.
 
-**Move が描く PAD の色について**：この画面を開いている間も、Move は裏で自分のトラックの PAD を光らせ続けます（Drum Rack の PAD がクリップに合わせて光るなど）。PAD の押下は Move から取り上げていますが、Move の LED までは止められません。そこで、Move が PAD の色を書き換えたら次のフレームでシーケンサーの色に塗り直し、さらに約 0.15 秒ごとに全 PAD を塗り直しています。Move が光らせた直後の 1 フレーム（十数ミリ秒）程度だけ、Move の色が見えることがあります。
+**About pad colours Move draws**: even while this screen is open, Move keeps lighting its
+own track's pads in the background (a Drum Rack's pads lighting along with a clip, for
+example). Pad presses are taken away from Move, but Move's LEDs cannot be stopped. So
+whenever Move rewrites a pad colour it is repainted with the sequencer's colour on the
+next frame, and all pads are repainted about every 0.15 s as well. For about one frame
+(a dozen or so milliseconds) after Move lights a pad, Move's colour may show.
 
-### 8 ステップの GEN
+### GEN at 8 steps
 
-TB-3PO 本来の生成方法は、ステップを 1 つずつ確率で決めます。16〜32 ステップなら偏りがならされますが、8 ステップだと 1 小節の半分を何度も繰り返し聴くことになるので、まとまりの無いフレーズになりがちです。そこで Length が 8 のときの GEN は、アシッドベースの組み立て方に沿って 1 つのループを作ります。操作は今までと同じで、GEN を押すだけです。
+TB-3PO's own generation decides steps one at a time by probability. Over 16–32 steps the
+bias evens out, but at 8 steps you hear half a bar over and over, so phrases tend to lack
+shape. So when Length is 8, GEN builds a single loop the way acid bass lines are put
+together. The operation is unchanged: just press GEN.
 
-1. **スタイル**を、次の 5 つから毎回ランダムに 1 つ選びます。画面には出ず、選ぶ操作もありません。
-   - **HYPNOTIC**：ルート音の繰り返しが中心。音程の変化は少なく、アクセントでリズムを作る。スライドは控えめ。
-   - **INDUSTRIAL**：ルート音を中心に、すぐ上と下の半音を飾りに使う攻撃的なフレーズ。アクセントが強く、スライドは短い音程差だけ。
-   - **ROLLING**：発音が多めで、ルート・5 度・オクターブを行き来する転がるフレーズ。スライドが比較的多い。
-   - **MINIMAL**：ほぼ 1 音（8 割以上がルート音）。休符とアクセントで変化をつけ、時々オクターブ上に跳ぶ。
-   - **BROKEN**：休符が多く、半音やトライトーンを飾りに使う不穏なフレーズ。アクセントは不規則で、大きな跳躍は少ない。
-2. **リズム**を先に決めます。`X-XX-X-X` や `XX-XX-XX` のような 8 ステップのリズムの型から 1 つ選び、発音を 1 つずらすなどして毎回違うノリにしたうえで、Density が求める発音数まで足したり減らしたりします。ステップ 1 は必ず発音し、全部休符や詰まりすぎにはなりません（Density 0 でも 2 音以上）。
-3. **音程**を決めます。スタイルに合った音程（ルート、5 度、短 3 度、オクターブ、半音など）から、Root / Scale / Octaves で使える音だけを使います。今のスケールに無い音（例えば Minor での半音）は使いません。同じ音の繰り返しを多めにし、大きな跳躍は避け、最後の音はステップ 1 のルートへ戻りやすい音にします。
-4. **アクセント**は、スタイルが好む拍に置きます。数は Accent の確率で決まり、全部の音には付けません。
-5. **スライド**は、発音しているステップから次の発音しているステップへだけ掛けます（8 ステップ目からループ先頭のステップ 1 への接続も含みます）。半音や同じ音へのスライドを優先し、数は Slide の確率で決まります。全部の音には付けず、休符をまたぐことはありません。
-6. こうした候補を 8 つ作り、ループとして一番まとまっているもの（発音数、ルート音の割合、跳躍の少なさ、ループのつなぎ目、アクセントとスライドの付き方）を採用します。
+1. A **style** is picked at random each time from these five. It is not shown on screen
+   and cannot be chosen.
+   - **HYPNOTIC**: centred on repeating the root. Little pitch movement; accents make the
+     rhythm. Few slides.
+   - **INDUSTRIAL**: an aggressive phrase around the root, decorated with the semitones just
+     above and below. Strong accents; slides only over short intervals.
+   - **ROLLING**: more notes, a rolling phrase moving between root, fifth and octave.
+     Relatively many slides.
+   - **MINIMAL**: almost one note (over 80 % root). Variation from rests and accents, with
+     an occasional jump up an octave.
+   - **BROKEN**: many rests, an uneasy phrase decorated with semitones and tritones.
+     Irregular accents, few big leaps.
+2. The **rhythm** comes first. One 8-step rhythm template such as `X-XX-X-X` or
+   `XX-XX-XX` is picked, varied each time (moving one hit, for instance), then hits are
+   added or removed to reach the count Density asks for. Step 1 always sounds, and it is
+   never all rests or overcrowded (at least 2 notes even at Density 0).
+3. The **pitches** come next. From intervals that suit the style (root, fifth, minor
+   third, octave, semitone, ...) only notes allowed by Root / Scale / Octaves are used.
+   Notes outside the current scale (a semitone in Minor, for example) are not used.
+   Repeated notes are favoured, big leaps avoided, and the last note is one that leads
+   easily back to the root on step 1.
+4. **Accents** go on the beats the style favours. Their number is set by the Accent
+   probability, and not every note gets one.
+5. **Slides** only go from a sounding step to the next sounding step (including the join
+   from step 8 back to step 1 at the loop start). Semitone and same-note slides are
+   preferred, and their number is set by the Slide probability. Not every note gets one,
+   and they never cross a rest.
+6. Eight such candidates are made and the one that hangs together best as a loop is kept
+   (number of notes, share of the root, few leaps, the loop join, how accents and slides
+   fall).
 
-できたパターンは TB-3PO 本来のデータ（ステップの種類・音階の度数・オクターブ）として書き込まれます。手で編集する・MUT で変異させる・バンクに保存して呼び出す・セットと一緒に保存される、といった扱いはすべて他のパターンと同じです。Undo で GEN の前のパターンに戻せます。MUT は 8 ステップでも TB-3PO 本来の動作のままです。
+The resulting pattern is written as TB-3PO's own data (step type, scale degree, octave).
+Editing by hand, mutating with MUT, saving to and recalling from banks, and being saved
+with the set all work exactly as for any other pattern. Undo goes back to the pattern
+before GEN. MUT keeps TB-3PO's own behaviour even at 8 steps.
 
-### ボタン（この音源の画面を開いている間）
+### Buttons (while this sound generator's screen is open)
 
-| ボタン | 動作 |
+| Button | Action |
 | --- | --- |
-| **+ / −** | パターン全体を 1 オクターブ上げる / 下げる（±4 オクターブまで） |
-| **< / >** | ステップ窓を移動（24 ステップ・32 ステップのパターンで後半を編集する） |
-| **Undo** | 直前の GEN / MUT / クリアを取り消す |
-| **X を 2 回** | パターンをクリア（1 回目で確認表示、約 1.5 秒以内にもう一度押すと実行） |
-| **ジョグを回す** | ページ切り替え |
-| **選択肢のあるノブを触りながらジョグを押す** | そのパラメータの選択肢一覧を開く。ジョグかノブで選び、ジョグを押して決定、Back で取り消し |
-| **Back** | 画面を閉じる（シーケンサーは鳴り続けます） |
+| **+ / −** | Shift the whole pattern up / down one octave (up to ±4 octaves) |
+| **< / >** | Move the step window (to edit the second half of 24- and 32-step patterns) |
+| **Undo** | Undo the last GEN / MUT / clear |
+| **X twice** | Clear the pattern (the first press shows a confirmation; press again within about 1.5 s to do it) |
+| **Turn the jog wheel** | Change page |
+| **Press the jog while touching a knob that has choices** | Opens that parameter's list of choices. Pick with the jog or the knob, press the jog to confirm, Back to cancel |
+| **Back** | Close the screen (the sequencer keeps playing) |
 
-これらのボタンは、この画面を表示している間は Move 本体には届きません。画面を閉じると Move の操作に戻ります。
+While this screen is shown these buttons do not reach Move. Closing the screen returns
+them to Move.
 
-### ノブとページ
+### Knobs and pages
 
-ジョグでページを切り替えます。画面上部のバーで今のページの位置が分かります。
+Change pages with the jog wheel. The bar at the top of the screen shows where the current
+page is.
 
-| ページ | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| Page | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | **Synth** | **Volume** | Cutoff | Resonance | Env Mod | Decay | Accent | RAT Dist | RAT Filter |
-| Steps | Density | Accent 確率 | Slide 確率 | Gate | | | | |
-| Pattern | Density | Accent 確率 | Slide 確率 | Gate | Root | Scale | Length | Octaves |
-| Setup | Direction | Transpose | Bank（表示のみ） | | | | | |
-| Tone | Waveform | Tuning | 303 Level | RAT オン/オフ | RAT / RAT2 | RAT Level | Low Cut | Hi Cut |
+| Steps | Density | Accent prob. | Slide prob. | Gate | | | | |
+| Pattern | Density | Accent prob. | Slide prob. | Gate | Root | Scale | Length | Octaves |
+| Setup | Direction | Transpose | Bank (display only) | | | | | |
+| Tone | Waveform | Tuning | 303 Level | RAT on/off | RAT / RAT2 | RAT Level | Low Cut | Hi Cut |
 | VCO | VCO2 Level | Tune | Fine | Wave | Hard Sync | Sync Env | VCO1 Level | |
-| Devilfish | Mod オン/オフ | Normal Decay | Accent Decay | Feedback HPF | Soft Attack | Slide Time | Shaper | |
+| Devilfish | Mod on/off | Normal Decay | Accent Decay | Feedback HPF | Soft Attack | Slide Time | Shaper | |
 
-さらに、PAD の割り当て図（Pads）とボタン一覧（Keys）のページがあります。
+There are also pages with the pad map (Pads) and the button list (Keys).
 
-- **Steps** ページは、ステップを大きく表示するレーンの下に、Pattern ページの 1 段目（Density / Accent 確率 / Slide 確率 / Gate）を並べたものです。
-- **Density / Accent 確率 / Slide 確率 / Octaves** は次の GEN（または MUT）から効きます。**Gate** は音の長さで、すぐ効きます。
-- **Root / Scale** は音階です。Scale は Minor / Phrygian / HarmMinor / MinPent / Dorian / Major から選べます。**Length** は 8 / 16 / 24 / 32 ステップです。
-- **Volume** はこの音源の最終段の音量で、RAT の後ろにあります。2 乗カーブで、0 で完全な無音になります。Volume の後に、フルスケールの 0.7 を超えた分だけを丸めるソフトリミッターが入っています。
-- **303 Level** は 303 から RAT に入る音量（歪みの深さに効きます）、**RAT Level** はペダル自体の出力音量です。どちらも Volume とは別のつまみです。
-- **RAT オン/オフ** は約 6 ミリ秒のクロスフェードで切り替わります。
+- The **Steps** page shows the steps large in a lane, with the first row of the Pattern
+  page (Density / Accent prob. / Slide prob. / Gate) below it.
+- **Density / Accent prob. / Slide prob. / Octaves** take effect from the next GEN (or
+  MUT). **Gate** is the note length and takes effect at once.
+- **Root / Scale** set the scale. Scale can be Minor / Phrygian / HarmMinor / MinPent /
+  Dorian / Major. **Length** is 8 / 16 / 24 / 32 steps.
+- **Volume** is this sound generator's final level, after RAT. It has a square-law curve
+  and 0 is complete silence. After Volume there is a soft limiter that rounds off only
+  what exceeds 0.7 of full scale.
+- **303 Level** is the level going from the 303 into RAT (it sets how deep the distortion
+  goes); **RAT Level** is the pedal's own output level. Both are separate from Volume.
+- **RAT on/off** switches with a crossfade of about 6 ms.
 
-### VCO2 とハードシンク
+### VCO2 and hard sync
 
-Open303 のオシレーター（VCO1）に、2 つ目のオシレーター（VCO2）を足しています。VCO2 は 303 のフィルターの手前で VCO1 と混ざるので、Cutoff・Env Mod・Accent・Decay は VCO2 にも同じようにかかります。スライドすると 2 つとも一緒にグライドします。
+A second oscillator (VCO2) is added to Open303's oscillator (VCO1). VCO2 is mixed with
+VCO1 before the 303 filter, so Cutoff, Env Mod, Accent and Decay act on VCO2 just the
+same. On a slide both glide together.
 
-- **VCO2 Level**：VCO2 の音量です。初期値は 0（オフ）です。
-- **Tune / Fine**：VCO1 に対する VCO2 の音程です。Tune は ±24 半音（初期値 +7）、Fine は ±50 セントです。
-- **Wave**：VCO2 の波形を、ノコギリ波か矩形波から選びます。
-- **Hard Sync**：オンにすると、VCO1 が 1 周期を終えるたびに VCO2 の位相を頭に戻します（初期値オン）。VCO2 を VCO1 より高く調律すると、シンク特有の鋭い倍音が出ます。
-- **Sync Env**：303 のメインエンベロープで、VCO2 の音程を最大 +36 半音持ち上げます。アクセントのステップほど強くかかり、ディケイに合わせて下がっていく「シンクスイープ」になります。
-- **VCO1 Level**：303 本来のオシレーターの音量です。下げると VCO2 だけの音になります。
+- **VCO2 Level**: VCO2's level. Default 0 (off).
+- **Tune / Fine**: VCO2's pitch relative to VCO1. Tune is ±24 semitones (default +7),
+  Fine ±50 cents.
+- **Wave**: VCO2's waveform, saw or square.
+- **Hard Sync**: when on, VCO2's phase resets every time VCO1 completes a cycle (default
+  on). Tuning VCO2 above VCO1 gives the sharp harmonics typical of sync.
+- **Sync Env**: the 303's main envelope raises VCO2's pitch by up to +36 semitones. It acts
+  harder on accented steps and falls with the decay, giving a "sync sweep".
+- **VCO1 Level**: the level of the 303's own oscillator. Turn it down for VCO2 alone.
 
-VCO2 は帯域制限した波形（PolyBLEP）で作り、Open303 内部の 4 倍オーバーサンプリングで動かしているので、シンクを強くかけても折り返しノイズを抑えています。VCO2 Level が 0 で VCO1 Level が 1 のときは、元の Open303 と 1 サンプルも違わない出力になります。
+VCO2 uses band-limited waveforms (PolyBLEP) and runs inside Open303's internal 4×
+oversampling, so aliasing stays down even with heavy sync. With VCO2 Level at 0 and VCO1
+Level at 1 the output is identical to the original Open303, sample for sample.
 
-### TB-3PO（ツール版）と違うところ
+### Differences from TB-3PO (the tool version)
 
-| TB-3PO | o303 | 理由 |
+| TB-3PO | o303 | Why |
 | --- | --- | --- |
-| 最下段 4・5 番目の PAD が MIDI チャンネル −/+ | OUT / IN（フレーズの音を外へ広げる / 内へまとめる） | 303 が内蔵なので MIDI チャンネルが無く、空いた PAD に割り当てた |
-| スロット A / B を Track ボタンで切り替え | シーケンサーは 1 つ | 音源は 1 声。Track ボタンは Schwung のスロット切り替えに使われ、音源からは使えない |
-| Step ボタンでページ移動 | ジョグのみ | Step ボタンを押すと Move のシーケンサーにも届いてしまう |
-| Shift + X でクリア | X を 2 回 | Shift + Delete は Schwung のスナップショット復帰に使われ、音源には届かない |
-| Back で一時停止 | Back で画面を閉じる | チェーンスロットの音源は、Move の再生中ずっと鳴る |
-| 状態を 1 つのファイルに保存 | スロットの状態として保存 | セットごと・スロットごとに別々に持つため |
+| Bottom-row pads 4 and 5 are MIDI channel −/+ | OUT / IN (spread the phrase's notes out / pull them in) | The 303 is built in, so there is no MIDI channel; the freed pads got a new job |
+| Slots A / B switched with the Track buttons | One sequencer | The voice is monophonic. The Track buttons switch Schwung slots and cannot be used by a sound generator |
+| Step buttons change page | Jog only | Pressing a Step button would also reach Move's sequencer |
+| Shift + X clears | X twice | Shift + Delete is used by Schwung's snapshot recall and never reaches the sound generator |
+| Back pauses | Back closes the screen | A chain-slot sound generator plays for as long as Move is playing |
+| State saved to one file | Saved as the slot's state | So each set and each slot has its own |
 
-### 保存
+### Saving
 
-今鳴っているパターン、8 つのバンク、シーケンサーの設定、すべての音色ノブは、スロットの状態として Schwung が自動で保存します。セットを開き直したり Move を再起動したりしても戻ります。新しいスロットに読み込んだときは、初期パターンから始まります。
+The playing pattern, the eight banks, the sequencer settings and every sound knob are
+saved automatically by Schwung as the slot's state. They come back when the set is
+reopened or Move is restarted. Loading into a new slot starts from the initial pattern.
 
-## 仕組み
+## How it works
 
-上流の 3 つのソースは `vendor/` に**無改変のまま**置いてあり（`vendor/SHA256SUMS` でチェック）、外側の薄いラッパーでつないでいます。RAT のファイルの著作者名は「Hiro Ikezawa」と表記しています（コメントとメタデータのみで、コードは取り込んだときのままです）。
+The three upstream sources sit **unmodified** in `vendor/` (checked with
+`vendor/SHA256SUMS`) and are joined by thin wrappers around them. The author name in the
+RAT files reads "Hiro Ikezawa" (comments and metadata only; the code is as imported).
 
-| ファイル | 包んでいるもの | 変えていること |
+| File | What it wraps | What it changes |
 | --- | --- | --- |
-| `dsp/tb_engine.c` | TB-3PO の `tb3po.c` | MIDI の送り先を、別スロットではなく内部の関数にする。チェーン音源の処理はすべてオーディオコールバック上で動くので、メモリ確保・スレッド・状態ファイルを使わない形にする |
-| `dsp/voice303.cpp` | Schwung 用 303 プラグインの `plugin.cpp`（Open303） | 自前のドライブ段を通す前の float 出力を受け取る。エンジンを下の `Open303Sync` に差し替える |
-| `dsp/open303_sync.h` | Open303（派生クラス） | 1 サンプル処理だけを差し替え、VCO2 とハードシンクを足す |
-| `dsp/rat_stage.c` | RAT ペダルの `rat.c` | ステレオのエフェクト用の外枠を外し、モノラル 1 段として動かす |
-| `dsp/acid8.c` | — | Length 8 のときの GEN が使う、8 ステップ専用のパターン生成 |
-| `dsp/tr_plugin.c` | — | 音源本体：パラメータ、状態の保存、信号経路 |
+| `dsp/tb_engine.c` | TB-3PO's `tb3po.c` | Sends MIDI to an internal function instead of another slot. Everything a chain sound generator does runs on the audio callback, so it uses no memory allocation, threads or state files |
+| `dsp/voice303.cpp` | The Schwung 303 plugin's `plugin.cpp` (Open303) | Takes the float output before its own drive stage. Swaps the engine for `Open303Sync` below |
+| `dsp/open303_sync.h` | Open303 (a derived class) | Replaces only the per-sample processing, adding VCO2 and hard sync |
+| `dsp/rat_stage.c` | The RAT pedal's `rat.c` | Removes the stereo effect wrapper and runs it as a single mono stage |
+| `dsp/acid8.c` | — | The 8-step pattern generation used by GEN when Length is 8 |
+| `dsp/tr_plugin.c` | — | The sound generator itself: parameters, state saving, signal path |
 
-**アクセントとスライドの渡し方**：TB-3PO が隣のスロットの 303 に送るのと同じ MIDI を、内部の関数 1 つ（`tr_plugin.c` の `seq_midi()`）で Open303 に渡しています。ベロシティ 118 がアクセント（Open303 は 100 以上をアクセントとして扱う）、72 が通常のノートです。スライドは前のノートを離す前に次のノートを送る形で、Open303 はこれをレガートとして滑らかにつなぎます。休符はノートオフです。
+**How accents and slides are passed on**: the same MIDI that TB-3PO sends to a 303 in the
+neighbouring slot is handed to Open303 through a single internal function (`seq_midi()`
+in `tr_plugin.c`). Velocity 118 is an accent (Open303 treats 100 and above as an accent)
+and 72 a normal note. A slide sends the next note before releasing the previous one, and
+Open303 joins them smoothly as legato. A rest is a note-off.
 
-**タイミング**：ステップは Move の MIDI クロック（1 拍 24 パルスの 6 パルスごと）で進み、Play を押した最初のパルスでステップ 1 が鳴ります。クロックが来ない場合は内部タイマーで進みます。`tests/test_engine.c` で、単体の TB-3PO プラグインと内蔵のエンジンを並べて動かし、同じ MIDI が同じオーディオブロックで出ることを確かめています。
+**Timing**: steps advance on Move's MIDI clock (every 6 pulses of 24 per beat), and step 1
+sounds on the first pulse after Play. If no clock arrives, an internal timer drives it.
+`tests/test_engine.c` runs the stand-alone TB-3PO plugin and the built-in engine side by
+side and checks that the same MIDI comes out in the same audio block.
 
-## ビルドとテスト
+## Building and testing
 
 ```bash
-scripts/test.sh                  # ネイティブビルド、全テスト、Move 用ビルドまで
-scripts/build.sh arm64           # dist/o303-module.tar.gz を作る
-scripts/install.py http://<Move の IP>:7700   # Schwung Manager 経由でインストール
-scripts/vendor.sh                # 上流のチェックアウトから vendor/ を取り直す
-scripts/vendor.sh --verify       # vendor/ が無改変かを確認（ビルド時に自動で実行）
+scripts/test.sh                  # native build, all tests, and the Move build
+scripts/build.sh arm64           # creates dist/o303-module.tar.gz
+scripts/install.py http://<Move's IP>:7700   # install through Schwung Manager
+scripts/vendor.sh                # refetch vendor/ from the upstream checkouts
+scripts/vendor.sh --verify       # check vendor/ is unmodified (runs automatically at build)
 ```
 
-- ビルドには aarch64 のクロスコンパイラ（`aarch64-linux-gnu-gcc` / `g++`）が要ります。Schwung のプラグイン API ヘッダーは `third_party/schwung/` に同梱しています（Schwung 1.7.3 のもの）。
-- UI テストは Schwung のページエンジンと描画ハーネスを使うので、Schwung のチェックアウトが要ります（`SCHWUNG_ROOT`、なければこのリポジトリの隣の `../schwung`）。見つからない場合は UI テストだけ飛ばします。`TR_SHARED` に実機の `shared/` のコピーを指定すると、実機と同じページエンジンでも確かめられます。
+- The build needs an aarch64 cross compiler (`aarch64-linux-gnu-gcc` / `g++`). The Schwung
+  plugin API header is bundled in `third_party/schwung/` (from Schwung 1.7.3).
+- The UI tests use Schwung's page engine and drawing harness, so they need a Schwung
+  checkout (`SCHWUNG_ROOT`, or else `../schwung` next to this repository). If none is
+  found only the UI tests are skipped. Point `TR_SHARED` at a copy of the device's
+  `shared/` to check against the same page engine as the device as well.
 
-| テスト | 確かめていること |
+| Test | What it checks |
 | --- | --- |
-| `tests/test_engine.c` | 内蔵シーケンサーが単体の TB-3PO と同じ MIDI を同じタイミングで出すこと（16 / 24 / 32 ステップの GEN と、8 ステップの MUT を含む）。OUT / IN が 1 音だけを、正しい向きに、スケールの隣の音へ動かすこと、Undo で戻ること、Octaves の範囲を出ないこと。8 ステップの GEN が新しい生成方法で書き込まれること、再生中の GEN で音が残らないこと、8 つのバンクへの保存・呼び出し・状態の保存。状態テキストが壊れていても落ちないこと（ASan / UBSan 付き） |
-| `tests/test_acid8.c` | 8 ステップの生成について、4 万通りの設定で約束をすべて守ること（ステップ 1 がルート、スケール外の音を使わない、休符へのスライドが無い、全部にアクセントやスライドが付かない等）。Density / Accent / Slide / Octaves がそれぞれ効くこと、5 つのスタイルの特徴が出ること |
-| `tests/test_vco.cpp` | VCO2 が初期値で元の Open303 と 1 サンプルも違わないこと、音量の較正、シンクで VCO1 の周期になること、Sync Env のスイープ、どの設定でも値が暴れないこと |
-| `tests/smoke.py` | 実際の `dsp.so` での再生・停止、テンポ追従、アクセント、スライド、RAT の位置、Volume、極端な設定、状態の保存と復元。8 ステップの GEN とバンク、v0.3.0 で保存した状態（`tests/fixtures/state_v030.json`）がそのまま読めること |
-| `tests/test_plugin.c` | 音源全体をランダムな操作で長時間動かし、メモリ違反や異常値が出ないこと（ASan / UBSan 付き） |
-| `tests/test_ui.mjs` | 画面・ノブ・PAD・ボタンの動作と、PAD の操作が TB-3PO 本物の `ui.js` と同じ結果になること |
+| `tests/test_engine.c` | The built-in sequencer emits the same MIDI at the same timing as the stand-alone TB-3PO (including GEN at 16 / 24 / 32 steps and MUT at 8 steps). OUT / IN move exactly one note, in the right direction, to the neighbouring scale note; Undo reverts them; they stay within Octaves. GEN at 8 steps writes with the new method, GEN while playing leaves no hanging notes, saving to / recalling from the eight banks, state saving. Corrupt state text does not crash (with ASan / UBSan) |
+| `tests/test_acid8.c` | The 8-step generation keeps every promise across 40,000 settings (step 1 is the root, no notes outside the scale, no slides into rests, not every note accented or slid, ...). Density / Accent / Slide / Octaves each have an effect, and the five styles show their character |
+| `tests/test_vco.cpp` | VCO2 at its defaults is identical to the original Open303 sample for sample, the level calibration, sync locking to VCO1's period, the Sync Env sweep, no runaway values in any setting |
+| `tests/smoke.py` | Play / stop with the real `dsp.so`, tempo following, accents, slides, RAT's position, Volume, extreme settings, state save and restore. GEN at 8 steps and the banks, and that state saved by v0.3.0 (`tests/fixtures/state_v030.json`) still loads |
+| `tests/test_plugin.c` | Runs the whole sound generator for a long time with random operations, with no memory errors or abnormal values (with ASan / UBSan) |
+| `tests/test_ui.mjs` | The behaviour of the screen, knobs, pads and buttons, and that pad operations give the same results as the real TB-3PO `ui.js` |
 
-## 制限と注意
+## Limitations and notes
 
-- 外部からのノート入力は無視します。303 を鳴らすのは内蔵シーケンサーだけです。
-- 再生中に読み込むと、次に来る 16 分音符から走り出します。次に Play を押すと頭がそろいます。
-- 画面表示中に使っているボタン（+ − < > Undo X）自体の LED は点けていません。
-- この音源の画面には Schwung の「My Presets」ページがありません。名前を付けたプリセットの保存や、別のスロットへのパターンの持ち出しはできません。
-- 上流のコードについての注意（`vendor/` は変更していません）：
-  - Open303 の `MipMappedWaveTable::initPrototypeTable()` は、配列の後ろに 4 要素ぶん 0 を書きます。実害はありませんが、最適化で問題にならないよう `-fno-aggressive-loop-optimizations` を付けてビルドしています。
-  - Open303 は生成時と、押さえているノートの一覧でメモリを確保します。
+- External note input is ignored. Only the built-in sequencer plays the 303.
+- Loaded while playing, it starts running from the next 1/16 note. The next Play lines up
+  the start.
+- The LEDs of the buttons used while the screen is shown (+ − < > Undo X) are not lit.
+- This sound generator's screen has no Schwung "My Presets" page. Saving named presets or
+  taking a pattern to another slot is not possible.
+- Notes on the upstream code (`vendor/` is not modified):
+  - Open303's `MipMappedWaveTable::initPrototypeTable()` writes 4 zeros past the end of an
+    array. It does no harm, but it is built with `-fno-aggressive-loop-optimizations` so
+    that optimisation cannot turn it into a problem.
+  - Open303 allocates memory at creation and for its list of held notes.
